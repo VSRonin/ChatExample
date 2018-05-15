@@ -4,22 +4,22 @@
 #include <QJsonParseError>
 ServerWorker::ServerWorker(QObject* parent)
     :QObject(parent)
-    ,
+    , m_serverSocket(new QTcpSocket(this))
 {
-    connect(this,&ServerSocket::readyRead,this,&ServerSocket::receiveJson);
+    connect(m_serverSocket,&QTcpSocket::readyRead,this,&ServerWorker::receiveJson);
 }
 
-void ServerSocket::sendJson(const QByteArray &jsonData)
+void ServerWorker::sendJson(const QByteArray &jsonData)
 {
-    QDataStream socketStream(this);
+    QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_6);
     socketStream << jsonData;
 }
 
-void ServerSocket::receiveJson()
+void ServerWorker::receiveJson()
 {
     QByteArray jsonData;
-    QDataStream socketStream(this);
+    QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_6);
     for(;;){
         socketStream.startTransaction();
