@@ -12,10 +12,13 @@ ChatServer::ChatServer(QObject *parent)
     m_availableThreads.reserve(m_idealThreadCount);
     m_threadsLoad.reserve(m_idealThreadCount);
 }
-void ChatServer::incomingConnection(qintptr socketDescriptor) override
+void ChatServer::incomingConnection(qintptr socketDescriptor)
 {
     ServerWorker* worker = new ServerWorker(this);
-    worker->setSocketDescriptor(socketDescriptor);
+    if(!worker->setSocketDescriptor(socketDescriptor)){
+        worker->deleteLater();
+        return;
+    }
     int threadIdx = m_availableThreads.size();
     if (threadIdx<m_idealThreadCount) { //we can add a new thread
         m_availableThreads.append(new QThread(this));
@@ -106,8 +109,8 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc
     const QJsonValue textVal = docObj.value(QLatin1String("text"));
     if(textVal.isNull() || !textVal.isString())
         return;
-    const QString textVal = textVal.toString().trimmed();
-    if(textVal.isEmpty())
+    const QString text = textVal.toString().trimmed();
+    if(text.isEmpty())
         return;
     broadcast(doc.toJson(),sender);
 }

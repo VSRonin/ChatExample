@@ -10,12 +10,12 @@ class ServerWorker : public QObject
 public:
     explicit ServerWorker(QObject* parent = nullptr);
     QTcpSocket* socket() const;
-    virtual bool setSocketDescriptor(qintptr socketDescriptor, QTcpSocket::SocketState socketState = ConnectedState, QTcpSocket::OpenMode openMode = ReadWrite);
+    virtual bool setSocketDescriptor(qintptr socketDescriptor, QTcpSocket::SocketState socketState = QTcpSocket::ConnectedState, QIODevice::OpenMode openMode = QIODevice::ReadWrite);
     QString userName() const;
     void setUserName(const QString &userName);
+    void sendJson(const QByteArray& jsonData);
 private slots:
     void receiveJson();
-    void sendJson(const QByteArray& jsonData);
 signals:
     void jsonReceived(const QJsonDocument& jsonDoc);
 private:

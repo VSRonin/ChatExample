@@ -9,14 +9,18 @@ ServerWorker::ServerWorker(QObject* parent)
     connect(m_serverSocket,&QTcpSocket::readyRead,this,&ServerWorker::receiveJson);
 }
 
+QTcpSocket *ServerWorker::socket() const
+{
+    return m_serverSocket;
+}
+
 bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket::SocketState socketState, QIODevice::OpenMode openMode)
 {
-    m_serverSocket->setSocketDescriptor(socketDescriptor,socketState,openMode);
+    return m_serverSocket->setSocketDescriptor(socketDescriptor,socketState,openMode);
 }
 
 void ServerWorker::sendJson(const QByteArray &jsonData)
 {
-    if(m_serverSocket)
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
     socketStream << jsonData;

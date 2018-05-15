@@ -16,17 +16,16 @@ environment:
   - QT5: C:\Qt\%LatestLTSQtVersion%\msvc2015_64
     COMPILER: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
     platform: amd64
+    use_mingw: "false"
 
 matrix:
   fast_finish: true
 
 before_build:
 - set PATH=%COMPILER%\bin;%QT5%\bin;%PATH%
-- if not %use_mingw%==true call "%COMPILER%\vcvarsall.bat" %platform%
-- if %use_mingw%==true (set MAKEGENERATOR=mingw32-make) else (set CMAKEGENERATOR=nmake)
-- if %use_mingw%==true set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+- if %use_mingw%==true (set PATH=%PATH:C:\Program Files\Git\usr\bin;=%) else (call "%COMPILER%\vcvarsall.bat" %platform%)
 
 build_script:
-- qmake
-- %MAKEGENERATOR% debug
-- %MAKEGENERATOR% release
+- qmake QtSimpleChat.pro
+- if %use_mingw%==true (mingw32-make debug) else (nmake debug)
+- if %use_mingw%==true (mingw32-make release) else (nmake release)

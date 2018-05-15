@@ -14,7 +14,7 @@ public:
 protected:
     void incomingConnection(qintptr socketDescriptor) override;
 private:
-    const int m_idealThreadCount = qMax(QThread::idealThreadCount(),1);
+    const int m_idealThreadCount;
     QVector<QThread*> m_availableThreads;
     QVector<int> m_threadsLoad;
     QVector<ServerWorker*> m_clients;

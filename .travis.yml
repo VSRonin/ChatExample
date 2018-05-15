@@ -50,7 +50,7 @@ script:
       && CPPFLAGS=-I$QTDIR/include
       ;
     fi
-- qmake
+- qmake QtSimpleChat.pro
 - make debug
 - make release
 
