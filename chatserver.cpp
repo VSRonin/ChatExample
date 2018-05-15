@@ -5,6 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QDebug>
+#include <QTimer>
 ChatServer::ChatServer(QObject *parent)
     :QTcpServer(parent)
     ,m_idealThreadCount(qMax(QThread::idealThreadCount(),1))
@@ -14,7 +16,7 @@ ChatServer::ChatServer(QObject *parent)
 }
 void ChatServer::incomingConnection(qintptr socketDescriptor)
 {
-    ServerWorker* worker = new ServerWorker(this);
+    ServerWorker* worker = new ServerWorker;
     if(!worker->setSocketDescriptor(socketDescriptor)){
         worker->deleteLater();
         return;
@@ -31,25 +33,28 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
         ++m_threadsLoad[threadIdx];
     }
     worker->moveToThread(m_availableThreads.at(threadIdx));
-    connect(worker->socket(), &QTcpSocket::disconnected, worker, &QTcpSocket::deleteLater);
+    connect(worker->socket(), &QTcpSocket::disconnected, worker, &QObject::deleteLater);
     connect(worker->socket(), &QTcpSocket::disconnected, this, std::bind(&ChatServer::userDisconnected,this,worker,threadIdx));
     connect(worker,&ServerWorker::jsonReceived,this,std::bind(&ChatServer::jsonReceived,this,worker,std::placeholders::_1));
     m_clients.append(worker);
     addPendingConnection(worker->socket());
+    qDebug() << "New CLient Connected";
 }
 
-void ChatServer::broadcast(const QByteArray &message, ServerWorker *exclude)
+void ChatServer::broadcast(QByteArray message, ServerWorker *exclude)
 {
     for(ServerWorker* worker : m_clients){
         Q_ASSERT(worker);
         if(worker==exclude)
             continue;
-        worker->sendJson(message);
+        QTimer::singleShot(0,worker,std::bind(&ServerWorker::sendJson,worker,message));
     }
 }
 
 void ChatServer::jsonReceived(ServerWorker *sender, const QJsonDocument &doc)
 {
+    Q_ASSERT(sender);
+    qDebug().noquote() << "json received" << doc.toJson();
     if(sender->userName().isEmpty())
         return jsonFromLoggedOut(sender,doc);
     jsonFromLoggedIn(sender,doc);
@@ -59,7 +64,7 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
 {
     --m_threadsLoad[threadIdx];
     m_clients.removeAll(sender);
-    broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "\"})",nullptr);
+    broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "\"}",nullptr);
 }
 
 void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &doc)
@@ -84,14 +89,14 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &do
         if(worker==sender)
             continue;
         if(worker->userName().compare(newUserName,Qt::CaseInsensitive)==0){
-            worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":false,"reason":"duplicate username"})"));
+            const QByteArray message = QByteArrayLiteral(R"({"type":"login","success":false,"reason":"duplicate username"})");
+            QTimer::singleShot(0,worker,std::bind(&ServerWorker::sendJson,worker,message));
             return;
         }
-        worker->setUserName(newUserName);
-        worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":true})"));
-        broadcast(R"({"type":"newuser","username":")" + newUserName.toUtf8() + "\"})",worker);
     }
-
+    sender->setUserName(newUserName);
+    QTimer::singleShot(0,sender,std::bind(&ServerWorker::sendJson,sender,QByteArrayLiteral(R"({"type":"login","success":true})")));
+    broadcast(R"({"type":"newuser","username":")" + newUserName.toUtf8() + "\"}",sender);
 }
 
 void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc)
@@ -112,5 +117,5 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc
     const QString text = textVal.toString().trimmed();
     if(text.isEmpty())
         return;
-    broadcast(R"({"type":"message","text":")"+ text.toUtf8() + R"(,"sender":")" + sender->userName().toUtf8() + "\"})",sender);
+    broadcast(R"({"type":"message","text":")"+ text.toUtf8() + R"(","sender":")" + sender->userName().toUtf8() + "\"}",sender);
 }

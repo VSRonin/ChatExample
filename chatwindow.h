@@ -28,7 +28,7 @@ private slots:
     void messageReceived(const QString& sender, const QString& text);
     void sendMessage();
     void disconnectedFromServer();
-
+    void userJoined(const QString& username);
 };
 
 #endif // CHATWINDOW_H

@@ -14,4 +14,4 @@ HEADERS += \
     chatserver.h \
     serverworker.h
 
-CONFIG += debug_and_release
+CONFIG += debug_and_release console

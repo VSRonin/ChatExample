@@ -19,7 +19,7 @@ private:
     QVector<int> m_threadsLoad;
     QVector<ServerWorker*> m_clients;
 private slots:
-    void broadcast(const QByteArray& message,ServerWorker* exclude);
+    void broadcast(QByteArray message,ServerWorker* exclude);
     void jsonReceived(ServerWorker* sender,const QJsonDocument& doc);
     void userDisconnected(ServerWorker* sender,int threadIdx);
 private:

@@ -2,6 +2,7 @@
 #include <QDataStream>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QDebug>
 ServerWorker::ServerWorker(QObject* parent)
     :QObject(parent)
     , m_serverSocket(new QTcpSocket(this))
@@ -49,6 +50,8 @@ void ServerWorker::receiveJson()
             const QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData,&parseError);
             if(parseError.error == QJsonParseError::NoError)
                 emit jsonReceived(jsonDoc);
+            else
+                qDebug() << "Invalid message: " << QString::fromUtf8(jsonData);
         }
         else{
             break;

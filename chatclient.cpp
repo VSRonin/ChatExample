@@ -3,6 +3,8 @@
 #include <QDataStream>
 #include <QJsonParseError>
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 ChatClient::ChatClient(QObject *parent)
     : QObject(parent)
     ,m_clientSocket(new QTcpSocket(this))
@@ -11,16 +13,16 @@ ChatClient::ChatClient(QObject *parent)
     connect(m_clientSocket,&QTcpSocket::connected,this,&ChatClient::connected);
     connect(m_clientSocket,&QTcpSocket::disconnected,this,&ChatClient::disconnected);
     connect(m_clientSocket,&QTcpSocket::readyRead,this,&ChatClient::onReadyRead);
-    connect(abstractSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),this,&ChatClient::error);
+    connect(m_clientSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),this,&ChatClient::error);
     connect(m_clientSocket,&QTcpSocket::disconnected,this,[this]()->void{m_loggedIn=false;});
 }
 
 void ChatClient::login(const QString &userName)
 {
     if(m_clientSocket->state() == QAbstractSocket::ConnectedState){
-        QDataStream clientStream;
+        QDataStream clientStream(m_clientSocket);
         clientStream.setVersion(QDataStream::Qt_5_7);
-        clientStream << (R"({"type":"login","username":")" + userName.toUtf8() + "\"})");
+        clientStream << (R"({"type":"login","username":")" + userName.toUtf8() + "\"}");
     }
 }
 
@@ -28,9 +30,9 @@ void ChatClient::sendMessage(const QString &text)
 {
     if(text.isEmpty())
         return;
-    QDataStream clientStream;
+    QDataStream clientStream(m_clientSocket);
     clientStream.setVersion(QDataStream::Qt_5_7);
-    clientStream << (R"({"type":"message","text":")" + text.toUtf8() + "\"})");
+    clientStream << (R"({"type":"message","text":")" + text.toUtf8() + "\"}");
 }
 
 void ChatClient::disconnectFromHost()
@@ -69,9 +71,15 @@ void ChatClient::jsonReceived(const QJsonDocument &doc)
             return;
         emit messageReceived(senderVal.toString(),textVal.toString());
     }
+    else if(typeVal.toString().compare(QLatin1String("newuser"),Qt::CaseInsensitive) == 0){
+        const QJsonValue usernameVal = docObj.value(QLatin1String("username"));
+        if(usernameVal.isNull() || !usernameVal.isString())
+            return;
+        emit userJoined(usernameVal.toString());
+    }
 }
 
-ChatClient::connectToServer(const QHostAddress &address, quint16 port)
+void ChatClient::connectToServer(const QHostAddress &address, quint16 port)
 {
     m_clientSocket->connectToHost(address,port);
 }

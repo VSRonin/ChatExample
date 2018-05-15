@@ -12,6 +12,7 @@ ChatWindow::ChatWindow(QWidget *parent)
     ,m_chatModel(new QStandardItemModel(this))
 {
     ui->setupUi(this);
+    m_chatModel->insertColumn(0);
     ui->chatView->setModel(m_chatModel);
     connect(m_chatClient,&ChatClient::connected,this,&ChatWindow::connectedToServer);
     connect(m_chatClient,&ChatClient::loggedIn,this,&ChatWindow::loggedIn);
@@ -19,6 +20,7 @@ ChatWindow::ChatWindow(QWidget *parent)
     connect(m_chatClient,&ChatClient::messageReceived,this,&ChatWindow::messageReceived);
     connect(m_chatClient,&ChatClient::disconnected ,this,&ChatWindow::disconnectedFromServer);
     connect(m_chatClient,&ChatClient::error,this,&ChatWindow::disconnectedFromServer);
+     connect(m_chatClient,&ChatClient::userJoined,this,&ChatWindow::userJoined);
     connect(ui->connectButton,&QPushButton::clicked,this,&ChatWindow::attemptConnection);
     connect(ui->sendButton,&QPushButton::clicked,this,&ChatWindow::sendMessage);
 }
@@ -64,9 +66,14 @@ void ChatWindow::loginFailed(const QString &reason)
 void ChatWindow::messageReceived(const QString &sender, const QString &text)
 {
     const int newRow = m_chatModel->rowCount();
-    m_chatModel->insertRow(newRow);
-    m_chatModel->setData(m_chatModel->index(newRow,0),sender + '\n' + text);
+    m_chatModel->insertRows(newRow,2);
+    QFont boldFont;
+    boldFont.setBold(true);
+    m_chatModel->setData(m_chatModel->index(newRow,0),sender + ':');
+    m_chatModel->setData(m_chatModel->index(newRow+1,0),text);
     m_chatModel->setData(m_chatModel->index(newRow,0), int(Qt::AlignLeft | Qt::AlignVCenter), Qt::TextAlignmentRole);
+    m_chatModel->setData(m_chatModel->index(newRow+1,0), int(Qt::AlignLeft | Qt::AlignVCenter), Qt::TextAlignmentRole);
+    m_chatModel->setData(m_chatModel->index(newRow,0), boldFont, Qt::FontRole);
     ui->chatView->scrollToBottom();
 }
 
@@ -77,6 +84,7 @@ void ChatWindow::sendMessage()
     m_chatModel->insertRow(newRow);
     m_chatModel->setData(m_chatModel->index(newRow,0),ui->messageEdit->text());
     m_chatModel->setData(m_chatModel->index(newRow,0), int(Qt::AlignRight | Qt::AlignVCenter), Qt::TextAlignmentRole);
+    ui->messageEdit->clear();
 }
 
 void ChatWindow::disconnectedFromServer()
@@ -85,4 +93,13 @@ void ChatWindow::disconnectedFromServer()
     ui->sendButton->setEnabled(false);
     ui->messageEdit->setEnabled(false);
     ui->chatView->setEnabled(false);
+}
+
+void ChatWindow::userJoined(const QString &username)
+{
+    const int newRow = m_chatModel->rowCount();
+    m_chatModel->insertRow(newRow);
+    m_chatModel->setData(m_chatModel->index(newRow,0), tr("%1 Joined the Chat").arg(username));
+    m_chatModel->setData(m_chatModel->index(newRow,0), Qt::AlignCenter, Qt::TextAlignmentRole);
+    m_chatModel->setData(m_chatModel->index(newRow,0), QBrush(Qt::blue), Qt::ForegroundRole);
 }
