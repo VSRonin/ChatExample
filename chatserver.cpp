@@ -14,6 +14,14 @@ ChatServer::ChatServer(QObject *parent)
     m_availableThreads.reserve(m_idealThreadCount);
     m_threadsLoad.reserve(m_idealThreadCount);
 }
+
+ChatServer::~ChatServer()
+{
+    for(QThread* singleThread : m_availableThreads){
+        singleThread->quit();
+        singleThread->wait();
+    }
+}
 void ChatServer::incomingConnection(qintptr socketDescriptor)
 {
     ServerWorker* worker = new ServerWorker;
@@ -33,7 +41,7 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
         ++m_threadsLoad[threadIdx];
     }
     worker->moveToThread(m_availableThreads.at(threadIdx));
-    connect(worker->socket(), &QTcpSocket::disconnected, worker, &QObject::deleteLater);
+    connect(m_availableThreads.at(threadIdx),&QThread::finished, worker, &QObject::deleteLater);
     connect(worker->socket(), &QTcpSocket::disconnected, this, std::bind(&ChatServer::userDisconnected,this,worker,threadIdx));
     connect(worker,&ServerWorker::jsonReceived,this,std::bind(&ChatServer::jsonReceived,this,worker,std::placeholders::_1));
     m_clients.append(worker);
@@ -65,6 +73,7 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
     --m_threadsLoad[threadIdx];
     m_clients.removeAll(sender);
     broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "\"}",nullptr);
+    sender->deleteLater();
 }
 
 void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &doc)
@@ -90,7 +99,7 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &do
             continue;
         if(worker->userName().compare(newUserName,Qt::CaseInsensitive)==0){
             const QByteArray message = QByteArrayLiteral(R"({"type":"login","success":false,"reason":"duplicate username"})");
-            QTimer::singleShot(0,worker,std::bind(&ServerWorker::sendJson,worker,message));
+            QTimer::singleShot(0,sender,std::bind(&ServerWorker::sendJson,sender,message));
             return;
         }
     }

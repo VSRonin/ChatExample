@@ -20,7 +20,8 @@ ChatWindow::ChatWindow(QWidget *parent)
     connect(m_chatClient,&ChatClient::messageReceived,this,&ChatWindow::messageReceived);
     connect(m_chatClient,&ChatClient::disconnected ,this,&ChatWindow::disconnectedFromServer);
     connect(m_chatClient,&ChatClient::error,this,&ChatWindow::disconnectedFromServer);
-     connect(m_chatClient,&ChatClient::userJoined,this,&ChatWindow::userJoined);
+    connect(m_chatClient,&ChatClient::userJoined,this,&ChatWindow::userJoined);
+    connect(m_chatClient,&ChatClient::userLeft,this,&ChatWindow::userLeft);
     connect(ui->connectButton,&QPushButton::clicked,this,&ChatWindow::attemptConnection);
     connect(ui->sendButton,&QPushButton::clicked,this,&ChatWindow::sendMessage);
 }
@@ -102,4 +103,12 @@ void ChatWindow::userJoined(const QString &username)
     m_chatModel->setData(m_chatModel->index(newRow,0), tr("%1 Joined the Chat").arg(username));
     m_chatModel->setData(m_chatModel->index(newRow,0), Qt::AlignCenter, Qt::TextAlignmentRole);
     m_chatModel->setData(m_chatModel->index(newRow,0), QBrush(Qt::blue), Qt::ForegroundRole);
+}
+void ChatWindow::userLeft(const QString &username)
+{
+    const int newRow = m_chatModel->rowCount();
+    m_chatModel->insertRow(newRow);
+    m_chatModel->setData(m_chatModel->index(newRow,0), tr("%1 Left the Chat").arg(username));
+    m_chatModel->setData(m_chatModel->index(newRow,0), Qt::AlignCenter, Qt::TextAlignmentRole);
+    m_chatModel->setData(m_chatModel->index(newRow,0), QBrush(Qt::red), Qt::ForegroundRole);
 }

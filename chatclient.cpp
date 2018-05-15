@@ -77,6 +77,13 @@ void ChatClient::jsonReceived(const QJsonDocument &doc)
             return;
         emit userJoined(usernameVal.toString());
     }
+    else if(typeVal.toString().compare(QLatin1String("userdisconnected"),Qt::CaseInsensitive) == 0){
+        const QJsonValue usernameVal = docObj.value(QLatin1String("username"));
+        if(usernameVal.isNull() || !usernameVal.isString())
+            return;
+        emit userLeft(usernameVal.toString());
+    }
+
 }
 
 void ChatClient::connectToServer(const QHostAddress &address, quint16 port)

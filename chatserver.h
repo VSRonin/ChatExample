@@ -11,6 +11,7 @@ class ChatServer : public QTcpServer
     Q_DISABLE_COPY(ChatServer)
 public:
     explicit ChatServer(QObject* parent = nullptr);
+    ~ChatServer();
 protected:
     void incomingConnection(qintptr socketDescriptor) override;
 private:
