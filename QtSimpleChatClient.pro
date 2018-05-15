@@ -10,10 +10,12 @@ CONFIG += debug_and_release
 
 SOURCES += \
     clientmain.cpp \
-    chatwindow.cpp
+    chatwindow.cpp \
+    chatclient.cpp
 
 FORMS += \
     chatwindow.ui
 
 HEADERS += \
-    chatwindow.h
+    chatwindow.h \
+    chatclient.h

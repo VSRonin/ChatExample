@@ -59,7 +59,7 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
 {
     --m_threadsLoad[threadIdx];
     m_clients.removeAll(sender);
-    broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "})",nullptr);
+    broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "\"})",nullptr);
 }
 
 void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &doc)
@@ -84,12 +84,12 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &do
         if(worker==sender)
             continue;
         if(worker->userName().compare(newUserName,Qt::CaseInsensitive)==0){
-            worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":0,"reason":"duplicate username"})"));
+            worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":false,"reason":"duplicate username"})"));
             return;
         }
         worker->setUserName(newUserName);
-        worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":1})"));
-        broadcast(R"({"type":"newuser","username":")" + newUserName.toUtf8() + "})",worker);
+        worker->sendJson(QByteArrayLiteral(R"({"type":"login","success":true})"));
+        broadcast(R"({"type":"newuser","username":")" + newUserName.toUtf8() + "\"})",worker);
     }
 
 }
@@ -112,5 +112,5 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc
     const QString text = textVal.toString().trimmed();
     if(text.isEmpty())
         return;
-    broadcast(doc.toJson(),sender);
+    broadcast(R"({"type":"message","text":")"+ text.toUtf8() + R"(,"sender":")" + sender->userName().toUtf8() + "\"})",sender);
 }

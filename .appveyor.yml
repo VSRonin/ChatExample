@@ -23,7 +23,8 @@ matrix:
 
 before_build:
 - set PATH=%COMPILER%\bin;%QT5%\bin;%PATH%
-- if %use_mingw%==true (set PATH=%PATH:C:\Program Files\Git\usr\bin;=%) else (call "%COMPILER%\vcvarsall.bat" %platform%)
+- if not %use_mingw%==true call "%COMPILER%\vcvarsall.bat" %platform%
+- if %use_mingw%==true set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
 build_script:
 - qmake QtSimpleChat.pro

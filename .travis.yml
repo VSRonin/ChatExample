@@ -51,8 +51,7 @@ script:
       ;
     fi
 - qmake QtSimpleChat.pro
-- make debug
-- make release
+- make
 
 notifications:
   email: false

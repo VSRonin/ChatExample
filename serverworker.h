@@ -1,5 +1,5 @@
-#ifndef SERVERSOCKET_H
-#define SERVERSOCKET_H
+#ifndef SERVERWORKER_H
+#define SERVERWORKER_H
 
 #include <QObject>
 #include <QTcpSocket>
@@ -23,4 +23,4 @@ private:
     QString m_userName;
 };
 
-#endif // SERVERSOCKET_H
+#endif // SERVERWORKER_H
