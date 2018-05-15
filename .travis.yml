@@ -1,0 +1,58 @@
+language: cpp
+
+git:
+  depth: 1
+
+branches:
+  only:
+  - master
+
+matrix:
+ fast_finish: true
+ include:
+  - os: linux
+    dist: trusty
+    sudo: required
+    compiler: gcc
+    env:
+      - QTVERSIONMINOR=59 QTVERSIONPATCH=594
+  - os: osx
+    compiler: clang
+
+install:
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+         lsb_release -a
+      && sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
+      && sudo apt-add-repository -y ppa:beineri/opt-qt${QTVERSIONPATCH}-trusty
+      && sudo apt-get -qq update
+      && sudo apt-get -qq install g++-6 libc6-i386 qt${QTVERSIONMINOR}base qt${QTVERSIONMINOR}tools 
+      && export CXX="g++-6"
+      && export CC="gcc-6"
+      ;
+    else
+         brew update > /dev/null
+      && brew install qt5
+      && chmod -R 755 /usr/local/opt/qt5/*
+      ;
+    fi
+
+script:
+- if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+         QTDIR="/opt/qt${QTVERSIONMINOR}"
+      && PATH="$QTDIR/bin:$PATH"
+      && qt${QTVERSIONMINOR}-env.sh
+      ;
+    else
+         QTDIR="/usr/local/opt/qt5"
+      && PATH="$QTDIR/bin:$PATH"
+      && PATH="$QTDIR/lib:$PATH"
+      && LDFLAGS=-L$QTDIR/lib
+      && CPPFLAGS=-I$QTDIR/include
+      ;
+    fi
+- qmake
+- make debug
+- make release
+
+notifications:
+  email: false
