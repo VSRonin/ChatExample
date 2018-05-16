@@ -15,7 +15,7 @@ matrix:
     sudo: required
     compiler: gcc
     env:
-      - QTVERSIONMINOR=59 QTVERSIONPATCH=594
+      - QTVERSIONMINOR=59 QTVERSIONPATCH=595
   - os: osx
     compiler: clang
 
