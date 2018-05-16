@@ -42,20 +42,25 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
     }
     worker->moveToThread(m_availableThreads.at(threadIdx));
     connect(m_availableThreads.at(threadIdx),&QThread::finished, worker, &QObject::deleteLater);
-    connect(worker->socket(), &QTcpSocket::disconnected, this, std::bind(&ChatServer::userDisconnected,this,worker,threadIdx));
+    const auto disconnectSlot = std::bind(&ChatServer::userDisconnected,this,worker,threadIdx);
+    connect(worker, &ServerWorker::disconnectedFromClient, this, disconnectSlot);
+    connect(worker, &ServerWorker::error, this, disconnectSlot);
     connect(worker,&ServerWorker::jsonReceived,this,std::bind(&ChatServer::jsonReceived,this,worker,std::placeholders::_1));
     m_clients.append(worker);
-    addPendingConnection(worker->socket());
-    qDebug() << "New CLient Connected";
+    qDebug() << "New client Connected";
 }
-
-void ChatServer::broadcast(QByteArray message, ServerWorker *exclude)
+void ChatServer::sendJson(ServerWorker *destination, const QByteArray &message)
+{
+    Q_ASSERT(destination);
+    QTimer::singleShot(0,destination,std::bind(&ServerWorker::sendJson,destination,message));
+}
+void ChatServer::broadcast(const QByteArray &message, ServerWorker *exclude)
 {
     for(ServerWorker* worker : m_clients){
         Q_ASSERT(worker);
         if(worker==exclude)
             continue;
-        QTimer::singleShot(0,worker,std::bind(&ServerWorker::sendJson,worker,message));
+        sendJson(worker,message);
     }
 }
 
@@ -99,12 +104,12 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &do
             continue;
         if(worker->userName().compare(newUserName,Qt::CaseInsensitive)==0){
             const QByteArray message = QByteArrayLiteral(R"({"type":"login","success":false,"reason":"duplicate username"})");
-            QTimer::singleShot(0,sender,std::bind(&ServerWorker::sendJson,sender,message));
+            sendJson(sender,message);
             return;
         }
     }
     sender->setUserName(newUserName);
-    QTimer::singleShot(0,sender,std::bind(&ServerWorker::sendJson,sender,QByteArrayLiteral(R"({"type":"login","success":true})")));
+    sendJson(sender,QByteArrayLiteral(R"({"type":"login","success":true})"));
     broadcast(R"({"type":"newuser","username":")" + newUserName.toUtf8() + "\"}",sender);
 }
 
@@ -128,3 +133,5 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc
         return;
     broadcast(R"({"type":"message","text":")"+ text.toUtf8() + R"(","sender":")" + sender->userName().toUtf8() + "\"}",sender);
 }
+
+

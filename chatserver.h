@@ -20,12 +20,13 @@ private:
     QVector<int> m_threadsLoad;
     QVector<ServerWorker*> m_clients;
 private slots:
-    void broadcast(QByteArray message,ServerWorker* exclude);
+    void broadcast(const QByteArray& message,ServerWorker* exclude);
     void jsonReceived(ServerWorker* sender,const QJsonDocument& doc);
     void userDisconnected(ServerWorker* sender,int threadIdx);
 private:
     void jsonFromLoggedOut(ServerWorker *sender, const QJsonDocument &doc);
     void jsonFromLoggedIn(ServerWorker *sender, const QJsonDocument &doc);
+    void sendJson(ServerWorker *destination, const QByteArray& message);
 };
 
 #endif // CHATSERVER_H

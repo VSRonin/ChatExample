@@ -2,6 +2,7 @@
 #define CHATWINDOW_H
 
 #include <QWidget>
+#include <QAbstractSocket>
 class ChatClient;
 class QStandardItemModel;
 namespace Ui {
@@ -19,6 +20,7 @@ private:
     Ui::ChatWindow *ui;
     ChatClient* m_chatClient;
     QStandardItemModel* m_chatModel;
+    QString m_lastUserName;
 private slots:
     void attemptConnection();
     void connectedToServer();
@@ -30,6 +32,7 @@ private slots:
     void disconnectedFromServer();
     void userJoined(const QString& username);
     void userLeft(const QString& username);
+    void error(QAbstractSocket::SocketError socketError);
 };
 
 #endif // CHATWINDOW_H

@@ -8,12 +8,10 @@ ServerWorker::ServerWorker(QObject* parent)
     , m_serverSocket(new QTcpSocket(this))
 {
     connect(m_serverSocket,&QTcpSocket::readyRead,this,&ServerWorker::receiveJson);
+    connect(m_serverSocket,&QTcpSocket::disconnected,this,&ServerWorker::disconnectedFromClient);
+    connect(m_serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),this,&ServerWorker::error);
 }
 
-QTcpSocket *ServerWorker::socket() const
-{
-    return m_serverSocket;
-}
 
 bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket::SocketState socketState, QIODevice::OpenMode openMode)
 {
