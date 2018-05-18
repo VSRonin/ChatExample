@@ -20,6 +20,7 @@ bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket
 
 void ServerWorker::sendJson(const QByteArray &jsonData)
 {
+    qDebug().noquote() << "Sending to " << userName() << jsonData;
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
     socketStream << jsonData;
@@ -27,12 +28,17 @@ void ServerWorker::sendJson(const QByteArray &jsonData)
 
 QString ServerWorker::userName() const
 {
-    return m_userName;
+    m_userNameLock.lockForRead();
+    const QString result = m_userName;
+    m_userNameLock.unlock();
+    return result;
 }
 
 void ServerWorker::setUserName(const QString &userName)
 {
+    m_userNameLock.lockForWrite();
     m_userName = userName;
+    m_userNameLock.unlock();
 }
 
 void ServerWorker::receiveJson()

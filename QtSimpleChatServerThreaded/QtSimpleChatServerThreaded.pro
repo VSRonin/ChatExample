@@ -1,6 +1,6 @@
 QT += core network
 
-TARGET = QtSimpleChatServer
+TARGET = QtSimpleChatServerThreaded
 TEMPLATE = app
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -11,6 +11,7 @@ SOURCES += \
     serverworker.cpp
 
 HEADERS += \
+    chatserver.h \
     chatserver.h \
     serverworker.h
 

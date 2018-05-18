@@ -77,7 +77,11 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
 {
     --m_threadsLoad[threadIdx];
     m_clients.removeAll(sender);
-    broadcast(R"({"type":"userdisconnected","username":")" + sender->userName().toUtf8() + "\"}",nullptr);
+    const QString userName = sender->userName();
+    if(!userName.isEmpty()){
+        broadcast(R"({"type":"userdisconnected","username":")" + userName.toUtf8() + "\"}",nullptr);
+        qDebug().noquote() << userName << " disconnected";
+    }
     sender->deleteLater();
 }
 
