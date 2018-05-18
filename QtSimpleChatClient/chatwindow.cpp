@@ -24,6 +24,7 @@ ChatWindow::ChatWindow(QWidget *parent)
     connect(m_chatClient,&ChatClient::userLeft,this,&ChatWindow::userLeft);
     connect(ui->connectButton,&QPushButton::clicked,this,&ChatWindow::attemptConnection);
     connect(ui->sendButton,&QPushButton::clicked,this,&ChatWindow::sendMessage);
+    connect(ui->messageEdit,&QLineEdit::returnPressed,this,&ChatWindow::sendMessage);
 }
 
 ChatWindow::~ChatWindow()
