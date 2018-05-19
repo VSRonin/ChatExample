@@ -1,3 +1,7 @@
 TEMPLATE = subdirs
 
-SUBDIRS = QtSimpleChatClient QtSimpleChatServer QtSimpleChatServerThreaded
+SUBDIRS = QtSimpleChat QtSimpleChatClient QtSimpleChatServer QtSimpleChatServerThreaded
+
+QtSimpleChatClient.depends = QtSimpleChat
+QtSimpleChatServer.depends = QtSimpleChat
+QtSimpleChatServerThreaded.depends = QtSimpleChat

@@ -1,0 +1,12 @@
+#ifndef QTSIMPLECHAT_H
+#define QTSIMPLECHAT_H
+
+#include <QtGlobal>
+
+#if defined(QTSIMPLECHAT_LIBRARY)
+#  define QTSIMPLECHAT_EXPORT Q_DECL_EXPORT
+#else
+#  define QTSIMPLECHAT_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // QTSIMPLECHAT_H
