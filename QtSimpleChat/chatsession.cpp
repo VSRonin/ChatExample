@@ -2,11 +2,10 @@
 
 #include <QTcpSocket>
 #include <QDataStream>
-#include <QBuffer>
 
 #include <QJsonDocument>
-#include <QJsonObject>
 #include <QJsonParseError>
+#include <QJsonObject>
 
 ChatSession::ChatSession(QObject * parent)
     : QObject(parent), socket(nullptr)
@@ -65,8 +64,8 @@ void ChatSession::readData()
 {
     QDataStream stream(socket);
 
-    // Read the JSON data
     while (true) {
+        // Read the JSON data
         stream.startTransaction();
         QByteArray jsonData;
         stream >> jsonData;
@@ -87,7 +86,6 @@ void ChatSession::readData()
             return;
         }
 
-        QJsonObject json = jsonDocument.object();
-        emit received(json);
+        emit received(jsonDocument.object());
     }
 }

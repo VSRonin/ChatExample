@@ -2,7 +2,6 @@
 #define CHATSESSION_H
 
 #include <QObject>
-#include <QByteArray>
 
 class QTcpSocket;
 class QJsonObject;
@@ -20,20 +19,21 @@ public:
     bool open(QTcpSocket *);
     void close();
 
-public slots:
-    void send(const QJsonObject &);
-
 signals:
     void opened();
     void closed();
     void error();
     void received(const QJsonObject &);
 
+public slots:
+    void send(const QJsonObject &);
+
 private slots:
-    void initialize();
     void readData();
 
 private:
+    void initialize();
+
     QTcpSocket * socket;
 };
 
