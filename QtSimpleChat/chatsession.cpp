@@ -58,39 +58,36 @@ void ChatSession::initialize()
     QObject::connect(socket, &QTcpSocket::connected, this, &ChatSession::opened);
     QObject::connect(socket, &QTcpSocket::disconnected, this, &ChatSession::closed);
     QObject::connect(socket, &QTcpSocket::readyRead, this, &ChatSession::readData);
+    QObject::connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error), this, &ChatSession::error);
 }
 
 void ChatSession::readData()
 {
-    data += socket->readAll();
-
-    QBuffer buffer(&data);
-    QDataStream stream(&buffer);
+    QDataStream stream(socket);
 
     // Read the JSON data
-    stream.startTransaction();
-    QByteArray jsonData;
-    stream >> jsonData;
-    if (!stream.commitTransaction())
-        return;     // The message may come in chunks, so wait for more
+    while (true) {
+        stream.startTransaction();
+        QByteArray jsonData;
+        stream >> jsonData;
+        if (!stream.commitTransaction())
+            return;     // The message may come in chunks, so wait for more
 
-    // Shorten the buffer with the read data
-    data = data.mid(buffer.pos());
+        // Parse the JSON data
+        QJsonParseError parseError;
+        const QJsonDocument jsonDocument = QJsonDocument::fromJson(jsonData, &parseError);
+        if(parseError.error != QJsonParseError::NoError)  {
+            qDebug().noquote() << QStringLiteral("Error parsing message: %1\n%2").arg(parseError.errorString()).arg(QString(jsonData));
+            return;
+        }
 
-    // Parse the JSON data
-    QJsonParseError parseError;
-    const QJsonDocument jsonDocument = QJsonDocument::fromJson(jsonData, &parseError);
-    if(parseError.error != QJsonParseError::NoError)  {
-        qDebug().noquote() << QStringLiteral("Error parsing message: %1\n%2").arg(parseError.errorString()).arg(QString(jsonData));
-        return;
+        // Sanity check for the message
+        if(!jsonDocument.isObject())  {
+            qDebug().noquote() << QStringLiteral("JSON message is of unexpected type");
+            return;
+        }
+
+        QJsonObject json = jsonDocument.object();
+        emit received(json);
     }
-
-    // Sanity check for the message
-    if(!jsonDocument.isObject())  {
-        qDebug().noquote() << QStringLiteral("JSON message is of unexpected type");
-        return;
-    }
-
-    QJsonObject json = jsonDocument.object();
-    emit received(json);
 }

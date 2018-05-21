@@ -26,6 +26,7 @@ public slots:
 signals:
     void opened();
     void closed();
+    void error();
     void received(const QJsonObject &);
 
 private slots:
@@ -34,7 +35,6 @@ private slots:
 
 private:
     QTcpSocket * socket;
-    QByteArray data;
 };
 
 #endif // CHATSESSION_H
