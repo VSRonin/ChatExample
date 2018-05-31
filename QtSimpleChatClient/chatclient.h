@@ -28,7 +28,7 @@ signals:
 private:
     QTcpSocket* m_clientSocket;
     bool m_loggedIn;
-    void jsonReceived(const QJsonDocument& doc);
+    void jsonReceived(const QJsonObject& doc);
 private slots:
     void onReadyRead();
 };

@@ -2,6 +2,7 @@
 #include <QDataStream>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QJsonObject>
 #include <QDebug>
 ServerWorker::ServerWorker(QObject* parent)
     :QObject(parent)
@@ -13,13 +14,14 @@ ServerWorker::ServerWorker(QObject* parent)
 }
 
 
-bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket::SocketState socketState, QIODevice::OpenMode openMode)
+bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor)
 {
-    return m_serverSocket->setSocketDescriptor(socketDescriptor,socketState,openMode);
+    return m_serverSocket->setSocketDescriptor(socketDescriptor);
 }
 
-void ServerWorker::sendJson(const QByteArray &jsonData)
+void ServerWorker::sendJson(const QJsonObject &json)
 {
+    const QByteArray jsonData = QJsonDocument(json).toJson();
     qDebug().noquote() << "Sending to " << userName() << jsonData;
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
@@ -47,10 +49,15 @@ void ServerWorker::receiveJson()
         if(socketStream.commitTransaction()){
             QJsonParseError parseError;
             const QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData,&parseError);
-            if(parseError.error == QJsonParseError::NoError)
-                emit jsonReceived(jsonDoc);
-            else
+            if(parseError.error == QJsonParseError::NoError){
+                if(jsonDoc.isObject())
+                    emit jsonReceived(jsonDoc.object());
+                else
+                    qDebug() << "Invalid message: " << QString::fromUtf8(jsonData);
+            }
+            else{
                 qDebug() << "Invalid message: " << QString::fromUtf8(jsonData);
+            }
         }
         else{
             break;

@@ -22,7 +22,10 @@ void ChatClient::login(const QString &userName)
     if(m_clientSocket->state() == QAbstractSocket::ConnectedState){
         QDataStream clientStream(m_clientSocket);
         clientStream.setVersion(QDataStream::Qt_5_7);
-        clientStream << (R"({"type":"login","username":")" + userName.toUtf8() + "\"}");
+        QJsonObject message;
+        message["type"]=QStringLiteral("login");
+        message["username"]=userName;
+        clientStream << QJsonDocument(message).toJson();
     }
 }
 
@@ -32,7 +35,10 @@ void ChatClient::sendMessage(const QString &text)
         return;
     QDataStream clientStream(m_clientSocket);
     clientStream.setVersion(QDataStream::Qt_5_7);
-    clientStream << (R"({"type":"message","text":")" + text.toUtf8() + "\"}");
+    QJsonObject message;
+    message["type"]=QStringLiteral("message");
+    message["text"]=text;
+    clientStream << QJsonDocument(message).toJson();
 }
 
 void ChatClient::disconnectFromHost()
@@ -40,11 +46,8 @@ void ChatClient::disconnectFromHost()
     m_clientSocket->disconnectFromHost();
 }
 
-void ChatClient::jsonReceived(const QJsonDocument &doc)
+void ChatClient::jsonReceived(const QJsonObject &docObj)
 {
-    if(!doc.isObject())
-        return;
-    const QJsonObject docObj = doc.object();
     const QJsonValue typeVal = docObj.value(QLatin1String("type"));
     if(typeVal.isNull() || !typeVal.isString())
         return;
@@ -102,8 +105,10 @@ void ChatClient::onReadyRead()
         if(socketStream.commitTransaction()){
             QJsonParseError parseError;
             const QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData,&parseError);
-            if(parseError.error == QJsonParseError::NoError)
-                jsonReceived(jsonDoc);
+            if(parseError.error == QJsonParseError::NoError){
+                if(jsonDoc.isObject())
+                    jsonReceived(jsonDoc.object());
+            }
         }
         else{
             break;
