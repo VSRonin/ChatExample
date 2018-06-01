@@ -1,9 +1,9 @@
-#include <QCoreApplication>
-#include "chatserver.h"
+#include <QApplication>
+#include "serverwindow.h"
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-    ChatServer server;
-    server.listen(QHostAddress::Any,1967);
+    QApplication a(argc, argv);
+    ServerWindow serverWin;
+    serverWin.show();
     return a.exec();
 }

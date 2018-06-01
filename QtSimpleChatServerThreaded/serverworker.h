@@ -15,12 +15,15 @@ public:
     QString userName() const;
     void setUserName(const QString &userName);
     void sendJson(const QJsonObject& json);
+public slots:
+    void disconnectFromClient();
 private slots:
     void receiveJson();
 signals:
     void jsonReceived(const QJsonObject& jsonDoc);
     void disconnectedFromClient();
     void error();
+    void logMessage(const QString& msg);
 private:
     QTcpSocket* m_serverSocket;
     QString m_userName;

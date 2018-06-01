@@ -5,7 +5,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QDebug>
 #include <QTimer>
 ChatServer::ChatServer(QObject *parent)
     :QTcpServer(parent)
@@ -21,8 +20,9 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
     connect(worker, &ServerWorker::disconnectedFromClient, this, std::bind(&ChatServer::userDisconnected,this,worker));
     connect(worker, &ServerWorker::error, this, std::bind(&ChatServer::userError,this,worker));
     connect(worker,&ServerWorker::jsonReceived,this,std::bind(&ChatServer::jsonReceived,this,worker,std::placeholders::_1));
+    connect(worker,&ServerWorker::logMessage,this,&ChatServer::logMessage);
     m_clients.append(worker);
-    qDebug() << "New client Connected";
+    emit logMessage(QStringLiteral("New client Connected"));
 }
 void ChatServer::sendJson(ServerWorker *destination, const QJsonObject &message)
 {
@@ -42,7 +42,7 @@ void ChatServer::broadcast(const QJsonObject &message, ServerWorker *exclude)
 void ChatServer::jsonReceived(ServerWorker *sender, const QJsonObject &doc)
 {
     Q_ASSERT(sender);
-    qDebug().noquote() << "json received" << QJsonDocument(doc).toJson();
+    emit logMessage("JSON received " + QString::fromUtf8(QJsonDocument(doc).toJson()));
     if(sender->userName().isEmpty())
         return jsonFromLoggedOut(sender,doc);
     jsonFromLoggedIn(sender,doc);
@@ -57,7 +57,7 @@ void ChatServer::userDisconnected(ServerWorker *sender)
         disconnectedMessage["type"] = QStringLiteral("userdisconnected");
         disconnectedMessage["username"] = userName;
         broadcast(disconnectedMessage,nullptr);
-        qDebug().noquote() << userName << " disconnected";
+        emit logMessage(userName + " disconnected");
     }
     sender->deleteLater();
 }
@@ -65,7 +65,15 @@ void ChatServer::userDisconnected(ServerWorker *sender)
 void ChatServer::userError(ServerWorker *sender)
 {
     Q_UNUSED(sender)
-    qDebug().noquote() << "Error from " << sender->userName();
+    emit logMessage("Error from " + sender->userName());
+}
+
+void ChatServer::stopServer()
+{
+    for(ServerWorker* worker : m_clients){
+        worker->disconnectFromClient();
+    }
+    close();
 }
 
 void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &docObj)

@@ -3,7 +3,6 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QJsonObject>
-#include <QDebug>
 ServerWorker::ServerWorker(QObject* parent)
     :QObject(parent)
     , m_serverSocket(new QTcpSocket(this))
@@ -22,10 +21,15 @@ bool ServerWorker::setSocketDescriptor(qintptr socketDescriptor)
 void ServerWorker::sendJson(const QJsonObject &json)
 {
     const QByteArray jsonData = QJsonDocument(json).toJson();
-    qDebug().noquote() << "Sending to " << userName() << jsonData;
+    emit logMessage("Sending to " + userName() + " - " + QString::fromUtf8(jsonData));
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
     socketStream << jsonData;
+}
+
+void ServerWorker::disconnectFromClient()
+{
+    m_serverSocket->disconnectFromHost();
 }
 
 QString ServerWorker::userName() const
@@ -53,10 +57,10 @@ void ServerWorker::receiveJson()
                 if(jsonDoc.isObject())
                     emit jsonReceived(jsonDoc.object());
                 else
-                    qDebug() << "Invalid message: " << QString::fromUtf8(jsonData);
+                    emit logMessage("Invalid message: " + QString::fromUtf8(jsonData));
             }
             else{
-                qDebug() << "Invalid message: " << QString::fromUtf8(jsonData);
+                emit logMessage("Invalid message: " + QString::fromUtf8(jsonData));
             }
         }
         else{
