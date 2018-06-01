@@ -16,6 +16,8 @@ public slots:
     void login(const QString &userName);
     void sendMessage(const QString &text);
     void disconnectFromHost();
+private slots:
+    void onReadyRead();
 signals:
     void connected();
     void loggedIn();
@@ -29,8 +31,6 @@ private:
     QTcpSocket *m_clientSocket;
     bool m_loggedIn;
     void jsonReceived(const QJsonObject &doc);
-private slots:
-    void onReadyRead();
 };
 
 #endif // CHATCLIENT_H
