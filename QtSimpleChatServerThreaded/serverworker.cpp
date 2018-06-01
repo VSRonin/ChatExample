@@ -3,13 +3,13 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QJsonObject>
-ServerWorker::ServerWorker(QObject* parent)
-    :QObject(parent)
+ServerWorker::ServerWorker(QObject *parent)
+    : QObject(parent)
     , m_serverSocket(new QTcpSocket(this))
 {
-    connect(m_serverSocket,&QTcpSocket::readyRead,this,&ServerWorker::receiveJson);
-    connect(m_serverSocket,&QTcpSocket::disconnected,this,&ServerWorker::disconnectedFromClient);
-    connect(m_serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),this,&ServerWorker::error);
+    connect(m_serverSocket, &QTcpSocket::readyRead, this, &ServerWorker::receiveJson);
+    connect(m_serverSocket, &QTcpSocket::disconnected, this, &ServerWorker::disconnectedFromClient);
+    connect(m_serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ServerWorker::error);
 }
 
 
@@ -52,23 +52,21 @@ void ServerWorker::receiveJson()
     QByteArray jsonData;
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
-    for(;;){
+    for (;;) {
         socketStream.startTransaction();
         socketStream >> jsonData;
-        if(socketStream.commitTransaction()){
+        if (socketStream.commitTransaction()) {
             QJsonParseError parseError;
-            const QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData,&parseError);
-            if(parseError.error == QJsonParseError::NoError){
-                if(jsonDoc.isObject())
+            const QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData, &parseError);
+            if (parseError.error == QJsonParseError::NoError) {
+                if (jsonDoc.isObject())
                     emit jsonReceived(jsonDoc.object());
                 else
                     emit logMessage("Invalid message: " + QString::fromUtf8(jsonData));
-            }
-            else{
+            } else {
                 emit logMessage("Invalid message: " + QString::fromUtf8(jsonData));
             }
-        }
-        else{
+        } else {
             break;
         }
     }

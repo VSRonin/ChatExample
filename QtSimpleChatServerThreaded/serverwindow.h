@@ -17,10 +17,10 @@ public:
 
 private:
     Ui::ServerWindow *ui;
-    ChatServer* m_chatServer;
+    ChatServer *m_chatServer;
 private slots:
     void toggleStartServer();
-    void logMessage(const QString& msg);
+    void logMessage(const QString &msg);
 };
 
 #endif // SERVERWINDOW_H
