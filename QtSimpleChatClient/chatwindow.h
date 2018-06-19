@@ -5,10 +5,7 @@
 #include <QAbstractSocket>
 class ChatClient;
 class QStandardItemModel;
-namespace Ui {
-class ChatWindow;
-}
-
+namespace Ui { class ChatWindow; }
 class ChatWindow : public QWidget
 {
     Q_OBJECT
