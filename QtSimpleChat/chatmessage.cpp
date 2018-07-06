@@ -32,6 +32,10 @@ ChatMessage::Type ChatMessage::type(const ChatMessage * message)
     return messageTypes.value(message->type(), UnknownType);
 }
 
+ChatMessage::~ChatMessage()
+{
+}
+
 void ChatMessage::setUsername(const QString & username)
 {
     user = username;
