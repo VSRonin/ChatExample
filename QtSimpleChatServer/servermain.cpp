@@ -5,13 +5,18 @@
 
 int main(int argc, char * argv[])
 {
-    QApplication app(argc, argv);
+    QApplication application(argc, argv);
 
-    ChatServer server;
-    server.listen(QHostAddress::Any, 1967);
+    ChatServer server(1967);
 
-    ServerWindow serverWin;
-    serverWin.show();
+    ServerWindow serverWindow;
+    serverWindow.show();
+
+    QObject::connect(&application, &QApplication::aboutToQuit, &server, &ChatServer::stop);
+    QObject::connect(&server, &ChatServer::started, &serverWindow, &ServerWindow::serverStarted);
+    QObject::connect(&server, &ChatServer::stopped, &serverWindow, &ServerWindow::serverStopped);
+    QObject::connect(&server, &ChatServer::statusReport, &serverWindow, &ServerWindow::logMessage);
+    QObject::connect(&serverWindow, &ServerWindow::toggleServer, &server, &ChatServer::toggle);
 
     return QApplication::exec();
 }

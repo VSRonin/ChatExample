@@ -28,6 +28,7 @@ signals:
     void closed();
     void error();
     void received(const ChatMessagePointer &);
+    void statusReport(const QString &);
 
 private slots:
     void readData();

@@ -1,26 +1,33 @@
 #ifndef SERVERWINDOW_H
 #define SERVERWINDOW_H
 
+#include "qtsimplechat.h"
+
 #include <QWidget>
 
 namespace Ui {
-class ServerWindow;
+    class ServerWindow;
 }
+
 class ChatServer;
 class ServerWindow : public QWidget
 {
     Q_OBJECT
     Q_DISABLE_COPY(ServerWindow)
+
 public:
-    explicit ServerWindow(QWidget *parent = nullptr);
-    ~ServerWindow();
+    explicit ServerWindow(QWidget * parent = nullptr);
+
+signals:
+    void toggleServer();
+
+public slots:
+    void logMessage(const QString &);
+    void serverStopped();
+    void serverStarted();
 
 private:
-    Ui::ServerWindow *ui;
-    ChatServer *m_chatServer;
-private slots:
-    void toggleStartServer();
-    void logMessage(const QString &msg);
+    Ui::ServerWindow * ui;
 };
 
 #endif // SERVERWINDOW_H
