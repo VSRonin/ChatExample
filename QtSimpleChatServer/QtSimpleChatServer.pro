@@ -5,17 +5,18 @@ TEMPLATE = app
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
-CONFIG += debug_and_release
+CONFIG += console
+
+INCLUDEPATH += $$PWD/../QtSimpleChat
+LIBS += -L$$OUT_PWD -lQtSimpleChat
 
 HEADERS += \
     chatserver.h \
-    serverworker.h \
     serverwindow.h
 
 SOURCES += \
     chatserver.cpp \
     servermain.cpp \
-    serverworker.cpp \
     serverwindow.cpp
 
 FORMS += \

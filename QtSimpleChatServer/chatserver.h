@@ -2,32 +2,25 @@
 #define CHATSERVER_H
 
 #include <QTcpServer>
-#include <QVector>
-class QThread;
-class ServerWorker;
+#include <QList>
+
+class ChatSession;
 class ChatServer : public QTcpServer
 {
     Q_OBJECT
     Q_DISABLE_COPY(ChatServer)
+
+    typedef QList<ChatSession *> ChatSessionList;
+
 public:
-    explicit ChatServer(QObject *parent = nullptr);
-protected:
-    void incomingConnection(qintptr socketDescriptor) override;
-private:
-    QVector<ServerWorker *> m_clients;
+    explicit ChatServer(QObject * parent = nullptr);
+
 private slots:
-    void broadcast(const QJsonObject &message, ServerWorker *exclude);
-    void jsonReceived(ServerWorker *sender, const QJsonObject &doc);
-    void userDisconnected(ServerWorker *sender);
-    void userError(ServerWorker *sender);
-public slots:
-    void stopServer();
+    void openSessions();
+    void closeSession(ChatSession *);
+
 private:
-    void jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &doc);
-    void jsonFromLoggedIn(ServerWorker *sender, const QJsonObject &doc);
-    void sendJson(ServerWorker *destination, const QJsonObject &message);
-signals:
-    void logMessage(const QString &msg);
+    ChatSessionList participants;
 };
 
 #endif // CHATSERVER_H
