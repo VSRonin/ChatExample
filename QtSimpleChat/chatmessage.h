@@ -1,17 +1,33 @@
 #ifndef CHATMESSAGE_H
 #define CHATMESSAGE_H
 
+#include "qtsimplechat.h"
+
 #include <QString>
+#include <QSharedData>
 
 class QJsonObject;
 
-class ChatMessage
+class QTSIMPLECHAT_EXPORT ChatMessage : public QSharedData
 {
+    friend ChatMessagePointer;
+
 public:
     enum Type { UnknownType, LoginType, LogoutType, TextType };
 
 public:
+    ChatMessage() = default;
+    virtual ~ChatMessage();
+
+protected:
+    ChatMessage(const ChatMessage &) = default;
+    ChatMessage & operator = (const ChatMessage &) = default;
+
+public:
     static Type type(const QJsonObject &);
+    static Type type(const ChatMessage &);
+    static Type type(const ChatMessagePointer &);
+    static Type type(const ChatMessage *);
 
     void setUsername(const QString &);
     QString username() const;
@@ -22,25 +38,53 @@ public:
 
 protected:
     virtual QString type() const = 0;
+    virtual ChatMessage * clone() const = 0;
 
 protected:
     QString user;
 };
 
-class ChatMessageLogin : public ChatMessage
+// Provide the correct copying for the message through the shared pointer
+template <>
+inline ChatMessage * ChatMessagePointer::clone()
+{
+    return d->clone();
+}
+
+class QTSIMPLECHAT_EXPORT ChatMessageLogin : public ChatMessage
 {
 public:
+    ChatMessageLogin() = default;
+
+private:
+    ChatMessageLogin(const ChatMessageLogin &) = default;
+
+protected:
     QString type() const override;
+    ChatMessage * clone() const override;
 };
 
-class ChatMessageLogout : public ChatMessage
+class QTSIMPLECHAT_EXPORT ChatMessageLogout : public ChatMessage
 {
 public:
+    ChatMessageLogout() = default;
+
+private:
+    ChatMessageLogout(const ChatMessageLogout &) = default;
+
+protected:
     QString type() const override;
+    ChatMessage * clone() const override;
 };
 
-class ChatMessageText : public ChatMessage
+class QTSIMPLECHAT_EXPORT ChatMessageText : public ChatMessage
 {
+public:
+    ChatMessageText() = default;
+
+private:
+    ChatMessageText(const ChatMessageText &) = default;
+
 public:
     void setText(const QString &);
     QString text() const;
@@ -49,9 +93,9 @@ public:
     QJsonObject toJson() const override;
 
 protected:
-     QString type() const override;
+    QString type() const override;
+    ChatMessage * clone() const override;
 
-protected:
     QString message;
 };
 

@@ -1,13 +1,14 @@
 #ifndef CHATSESSION_H
 #define CHATSESSION_H
 
+#include "qtsimplechat.h"
 #include <QObject>
 
 class QTcpSocket;
 class QJsonObject;
 
 class ChatSessionPrivate;
-class ChatSession : public QObject
+class QTSIMPLECHAT_EXPORT ChatSession : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(ChatSession)
@@ -15,24 +16,25 @@ class ChatSession : public QObject
 public:
     explicit ChatSession(QObject * parent = nullptr);
 
+public slots:
     bool open(qintptr);
     bool open(QTcpSocket *);
     void close();
+    void send(const ChatMessage &);
+    void send(const ChatMessagePointer &);
 
 signals:
     void opened();
     void closed();
     void error();
-    void received(const QJsonObject &);
-
-public slots:
-    void send(const QJsonObject &);
+    void received(const ChatMessagePointer &);
 
 private slots:
     void readData();
 
 private:
     void initialize();
+    void decodeJson(const QJsonObject &);
 
     QTcpSocket * socket;
 };

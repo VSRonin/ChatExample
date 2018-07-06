@@ -1,4 +1,5 @@
 #include "chatsession.h"
+#include "chatmessage.h"
 
 #include <QTcpSocket>
 #include <QDataStream>
@@ -42,14 +43,21 @@ void ChatSession::close()
         socket->disconnectFromHost();
 }
 
-void ChatSession::send(const QJsonObject & json)
+void ChatSession::send(const ChatMessage & message)
 {
     Q_ASSERT(socket);
     if (!socket)
         return;
 
     QDataStream stream(socket);
-    stream << QJsonDocument(json).toJson();
+    stream << QJsonDocument(message.toJson()).toJson();
+}
+
+void ChatSession::send(const ChatMessagePointer & messagePointer)
+{
+    const ChatMessage * message = messagePointer.data();
+    if (message)
+        send(*message);
 }
 
 void ChatSession::initialize()
@@ -86,6 +94,34 @@ void ChatSession::readData()
             return;
         }
 
-        emit received(jsonDocument.object());
+        // Convert the JSON data to a message object & emit the appropriate signal
+        decodeJson(jsonDocument.object());
     }
+}
+
+void ChatSession::decodeJson(const QJsonObject & json)
+{
+    ChatMessagePointer message;
+    switch (ChatMessage::type(json))
+    {
+    case ChatMessage::LoginType:
+        message = new ChatMessageLogin();
+        break;
+    case ChatMessage::LogoutType:
+        message = new ChatMessageLogout();
+        break;
+    case ChatMessage::TextType:
+        message = new ChatMessageText();
+        break;
+    default:
+        qDebug().noquote() << QStringLiteral("Unknown message type.");
+        return;
+    }
+
+    if (!message->fromJson(json))  {
+        qDebug().noquote() << QStringLiteral("Couldn't decode the JSON message");
+        return;
+    }
+
+    emit received(message);
 }

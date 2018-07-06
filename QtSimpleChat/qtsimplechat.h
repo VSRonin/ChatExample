@@ -9,4 +9,10 @@
 #  define QTSIMPLECHAT_EXPORT Q_DECL_IMPORT
 #endif
 
+template <class T>
+class QSharedDataPointer;
+
+class ChatMessage;
+typedef QSharedDataPointer<ChatMessage> ChatMessagePointer;
+
 #endif // QTSIMPLECHAT_H

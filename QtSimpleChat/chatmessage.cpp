@@ -14,7 +14,22 @@ static QHash<QString, ChatMessage::Type> messageTypes = {
 ChatMessage::Type ChatMessage::type(const QJsonObject & json)
 {
     QString messageType = json.value(QStringLiteral("type")).toString();
-    return messageTypes.value(messageType);
+    return messageTypes.value(messageType, UnknownType);
+}
+
+ChatMessage::Type ChatMessage::type(const ChatMessage & message)
+{
+    return messageTypes.value(message.type(), UnknownType);
+}
+
+ChatMessage::Type ChatMessage::type(const ChatMessagePointer & message)
+{
+    return messageTypes.value(message->type(), UnknownType);
+}
+
+ChatMessage::Type ChatMessage::type(const ChatMessage * message)
+{
+    return messageTypes.value(message->type(), UnknownType);
 }
 
 void ChatMessage::setUsername(const QString & username)
@@ -52,9 +67,19 @@ QString ChatMessageLogin::type() const
     return QStringLiteral("login");
 }
 
+ChatMessage * ChatMessageLogin::clone() const
+{
+    return new ChatMessageLogin(*this);
+}
+
 QString ChatMessageLogout::type() const
 {
     return QStringLiteral("logout");
+}
+
+ChatMessage * ChatMessageLogout::clone() const
+{
+    return new ChatMessageLogout(*this);
 }
 
 void ChatMessageText::setText(const QString & text)
@@ -87,4 +112,9 @@ QJsonObject ChatMessageText::toJson() const
 QString ChatMessageText::type() const
 {
     return QStringLiteral("message");
+}
+
+ChatMessage * ChatMessageText::clone() const
+{
+    return new ChatMessageText(*this);
 }
