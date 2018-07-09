@@ -2,9 +2,10 @@
 #define CHATSESSION_H
 
 #include "qtsimplechat.h"
-#include <QObject>
 
-class QTcpSocket;
+#include <QObject>
+#include <QTcpSocket>
+
 class QJsonObject;
 
 class ChatSessionPrivate;
@@ -15,6 +16,9 @@ class QTSIMPLECHAT_EXPORT ChatSession : public QObject
 
 public:
     explicit ChatSession(QObject * parent = nullptr);
+    ~ChatSession() override;
+
+    QString lastError() const;
 
 public slots:
     bool open(qintptr);
@@ -32,12 +36,15 @@ signals:
 
 private slots:
     void readData();
+    void setLastError(QAbstractSocket::SocketError);
 
 private:
     void initialize();
     void decodeJson(const QJsonObject &);
 
-    QTcpSocket * socket;
+private:
+    QTcpSocket * m_socket;
+    QString m_lastError;
 };
 
 #endif // CHATSESSION_H
