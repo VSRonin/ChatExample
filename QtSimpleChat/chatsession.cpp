@@ -198,6 +198,9 @@ void ChatSession::decodeJson(const QJsonObject & json)
     case ChatMessage::LoginType:
         message = new ChatMessageLogin();
         break;
+    case ChatMessage::LoginStatusType:
+        message = new ChatMessageLoginStatus();
+        break;
     case ChatMessage::LogoutType:
         message = new ChatMessageLogout();
         break;

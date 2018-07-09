@@ -1,5 +1,6 @@
 #include "chatserver.h"
 #include "chatsession.h"
+#include "chatmessage.h"
 
 #include <functional>
 
@@ -81,29 +82,69 @@ void ChatServer::openSessions()
         // Log the received messages & status (delegate the signals)
         QObject::connect(session, &ChatSession::statusReport, this, &ChatServer::statusReport);
         QObject::connect(session, &ChatSession::received, this, &ChatServer::messageReceived);
+        QObject::connect(session, &ChatSession::received, this, std::bind(&ChatServer::processMessage, this, session, std::placeholders::_1));
 
         // Take care of the cleaning up
         QObject::connect(this, &ChatServer::aboutToStop, session, &ChatSession::close);
-        QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, session));
         QObject::connect(session, &ChatSession::closed, session, &ChatSession::deleteLater);
-
-        // Connect all the existing clients to the new one
-        for (ChatSessionList::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)  {
-            QObject::connect(*i, &ChatSession::received, session, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
-            QObject::connect(session, &ChatSession::received, *i, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
-        }
-
-        // Append the new session to our participants list
-        participants.append(session);
 
         emit statusReport(QStringLiteral("A client has connected"));
     }
 }
 
-void ChatServer::closeSession(ChatSession * session)
+void ChatServer::closeSession(const QString & username)
 {
     // Just remove the closing session from the participants list
-    participants.removeOne(session);
+    if (participants.remove(username))
+        emit statusReport(QStringLiteral("A client has disconnected"));
+}
 
-    emit statusReport(QStringLiteral("A client has disconnected"));
+void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer & message)
+{
+    switch (message->type())
+    {
+    case ChatMessage::LoginType:
+        {
+            const ChatMessageLogin * loginMessage = reinterpret_cast<const ChatMessageLogin *>(message.data());
+
+            QString username = loginMessage->username();
+
+            ChatMessageLoginStatus statusMessage;
+            statusMessage.setUsername(username);
+
+            if (participants.contains(username))  {
+                statusMessage.setStatus(ChatMessageLoginStatus::Fail);
+                statusMessage.setErrorText(QStringLiteral("Username already in use"));
+            }
+            else  {
+                statusMessage.setStatus(ChatMessageLoginStatus::Success);
+
+                // Unregister the client if the connection is closed prematurely
+                QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, username));
+                // Connect all the existing clients to the new one
+                for (ChatSessionHash::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)  {
+                    QObject::connect(*i, &ChatSession::received, session, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
+                    QObject::connect(session, &ChatSession::received, *i, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
+                }
+
+                // Insert the session into the active participants
+                participants.insert(username, session);
+            }
+
+            session->send(statusMessage);
+        }
+        break;
+    case ChatMessage::LogoutType:
+        {
+            const ChatMessageLogout * logoutMessage = reinterpret_cast<const ChatMessageLogout *>(message.data());
+
+            QString username = logoutMessage->username();
+            ChatSession * session = participants.value(username, nullptr);
+            if (session)
+                session->close();
+        }
+        break;
+    default:
+        ;
+    }
 }

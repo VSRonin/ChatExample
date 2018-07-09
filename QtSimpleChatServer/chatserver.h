@@ -4,7 +4,7 @@
 #include "qtsimplechat.h"
 
 #include <QTcpServer>
-#include <QList>
+#include <QHash>
 
 class ChatSession;
 class ChatServer : public QTcpServer
@@ -12,7 +12,7 @@ class ChatServer : public QTcpServer
     Q_OBJECT
     Q_DISABLE_COPY(ChatServer)
 
-    typedef QList<ChatSession *> ChatSessionList;
+    typedef QHash<QString, ChatSession *> ChatSessionHash;
 
 public:
     explicit ChatServer(QObject * parent = nullptr);
@@ -36,11 +36,12 @@ signals:
 
 private slots:
     void openSessions();
-    void closeSession(ChatSession *);
+    void closeSession(const QString &);
+    void processMessage(ChatSession *, const ChatMessagePointer &);
 
 private:
     quint16 listenPort;
-    ChatSessionList participants;
+    ChatSessionHash participants;
 };
 
 #endif // CHATSERVER_H

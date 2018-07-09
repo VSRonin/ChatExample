@@ -13,7 +13,7 @@ class QTSIMPLECHAT_EXPORT ChatMessage : public QSharedData
     friend ChatMessagePointer;
 
 public:
-    enum Type { UnknownType, LoginType, LoginStatusType, LogoutType, TextType };
+    enum Type { UnknownType = -1, LoginType = 0, LoginStatusType, LogoutType, TextType };
 
 public:
     ChatMessage() = default;
@@ -25,9 +25,7 @@ protected:
 
 public:
     static Type type(const QJsonObject &);
-    static Type type(const ChatMessage &);
-    static Type type(const ChatMessagePointer &);
-    static Type type(const ChatMessage *);
+    virtual Type type() const = 0;
 
     void setUsername(const QString &);
     QString username() const;
@@ -37,7 +35,6 @@ public:
     virtual QJsonObject toJson() const;
 
 protected:
-    virtual QString type() const = 0;
     virtual ChatMessage * clone() const = 0;
 
 protected:
@@ -59,8 +56,9 @@ public:
 private:
     ChatMessageLogin(const ChatMessageLogin &) = default;
 
+    Type type() const override;
+
 protected:
-    QString type() const override;
     ChatMessage * clone() const override;
 };
 
@@ -70,6 +68,8 @@ public:
     enum Status { Fail, Success };
 
     ChatMessageLoginStatus();
+
+    Type type() const override;
 
     void setStatus(Status);
     Status status() const;
@@ -84,7 +84,6 @@ private:
     ChatMessageLoginStatus(const ChatMessageLoginStatus &) = default;
 
 protected:
-    QString type() const override;
     ChatMessage * clone() const override;
 
     Status m_status;
@@ -96,11 +95,12 @@ class QTSIMPLECHAT_EXPORT ChatMessageLogout : public ChatMessage
 public:
     ChatMessageLogout() = default;
 
+    Type type() const override;
+
 private:
     ChatMessageLogout(const ChatMessageLogout &) = default;
 
 protected:
-    QString type() const override;
     ChatMessage * clone() const override;
 };
 
@@ -108,6 +108,8 @@ class QTSIMPLECHAT_EXPORT ChatMessageText : public ChatMessage
 {
 public:
     ChatMessageText() = default;
+
+    Type type() const override;
 
 private:
     ChatMessageText(const ChatMessageText &) = default;
@@ -120,7 +122,6 @@ public:
     QJsonObject toJson() const override;
 
 protected:
-    QString type() const override;
     ChatMessage * clone() const override;
 
     QString message;

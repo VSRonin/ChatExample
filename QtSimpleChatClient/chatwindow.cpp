@@ -44,6 +44,8 @@ void ChatWindow::connectedToServer()
     if (newUsername.isEmpty())  {
         // If the user clicked cancel or typed nothing, we just disconnect from the server
         m_session.close();
+        // Reenable the connect button
+        ui.connectButton->setEnabled(true);
         return;
     }
 
@@ -93,7 +95,7 @@ void ChatWindow::error()
 
 void ChatWindow::messageReceived(const ChatMessagePointer & message)
 {
-    switch (ChatMessage::type(message))
+    switch (message->type())
     {
     case ChatMessage::LoginType:
         logInReceived(*dynamic_cast<const ChatMessageLogin *>(message.data()));

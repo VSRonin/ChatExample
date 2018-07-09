@@ -11,13 +11,11 @@ INCLUDEPATH += $$PWD/../QtSimpleChat
 LIBS += -L$$DESTDIR -lQtSimpleChat
 
 HEADERS += \
-    chatwindow.h \
-    chatclient.h
+    chatwindow.h
 
 SOURCES += \
     clientmain.cpp \
-    chatwindow.cpp \
-    chatclient.cpp
+    chatwindow.cpp
 
 FORMS += \
     chatwindow.ui

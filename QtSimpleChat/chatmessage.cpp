@@ -1,36 +1,57 @@
 #include "chatmessage.h"
 
+#include <QVector>
 #include <QHash>
+#include <QString>
 
 #include <QJsonObject>
 #include <QJsonValue>
 
-static QHash<QString, ChatMessage::Type> messageTypes = {
-    { QStringLiteral("login"), ChatMessage::LoginType },
-    { QStringLiteral("login-status"), ChatMessage::LoginStatusType },
-    { QStringLiteral("logout"), ChatMessage::LogoutType },
-    { QStringLiteral("message"), ChatMessage::TextType }
-};
+struct MessageTypes
+{
+public:
+    MessageTypes();
+
+    static QString toString(int);
+    static ChatMessage::Type fromString(const QString &);
+
+private:
+    QVector<QString> typeToString;
+    QHash<QString, ChatMessage::Type> stringToType;
+} __messageTypes;
+
+MessageTypes::MessageTypes()
+{
+    typeToString = {
+        QStringLiteral("login"),
+        QStringLiteral("login-status"),
+        QStringLiteral("logout"),
+        QStringLiteral("message")
+    };
+
+    qint32 size = typeToString.size();
+    stringToType.reserve(size);
+
+    for (qint32 i = 0; i < size; i++)
+        stringToType.insert(typeToString.at(i), static_cast<ChatMessage::Type>(i));
+}
+
+inline QString MessageTypes::toString(int type)
+{
+    return type < 0 || type >= __messageTypes.typeToString.size() ? QString() : __messageTypes.typeToString.at(type);
+}
+
+inline ChatMessage::Type MessageTypes::fromString(const QString & string)
+{
+    return __messageTypes.stringToType.value(string, ChatMessage::UnknownType);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------------------- //
 
 ChatMessage::Type ChatMessage::type(const QJsonObject & json)
 {
     QString messageType = json.value(QStringLiteral("type")).toString();
-    return messageTypes.value(messageType, UnknownType);
-}
-
-ChatMessage::Type ChatMessage::type(const ChatMessage & message)
-{
-    return messageTypes.value(message.type(), UnknownType);
-}
-
-ChatMessage::Type ChatMessage::type(const ChatMessagePointer & message)
-{
-    return messageTypes.value(message->type(), UnknownType);
-}
-
-ChatMessage::Type ChatMessage::type(const ChatMessage * message)
-{
-    return messageTypes.value(message->type(), UnknownType);
+    return MessageTypes::fromString(messageType);
 }
 
 ChatMessage::~ChatMessage()
@@ -60,16 +81,16 @@ bool ChatMessage::fromJson(const QJsonObject & json)
 QJsonObject ChatMessage::toJson() const
 {
     QJsonObject result = {
-        { QStringLiteral("type"), type() },
+        { QStringLiteral("type"), MessageTypes::toString(type()) },
         { QStringLiteral("username"), user }
     };
 
     return result;
 }
 
-QString ChatMessageLogin::type() const
+ChatMessage::Type ChatMessageLogin::type() const
 {
-    return QStringLiteral("login");
+    return LoginType;
 }
 
 ChatMessageLoginStatus::ChatMessageLoginStatus()
@@ -120,9 +141,9 @@ ChatMessage * ChatMessageLogin::clone() const
     return new ChatMessageLogin(*this);
 }
 
-QString ChatMessageLoginStatus::type() const
+ChatMessage::Type ChatMessageLoginStatus::type() const
 {
-    return QStringLiteral("login-status");
+    return LoginStatusType;
 }
 
 ChatMessage * ChatMessageLoginStatus::clone() const
@@ -130,9 +151,9 @@ ChatMessage * ChatMessageLoginStatus::clone() const
     return new ChatMessageLoginStatus(*this);
 }
 
-QString ChatMessageLogout::type() const
+ChatMessage::Type ChatMessageLogout::type() const
 {
-    return QStringLiteral("logout");
+    return LogoutType;
 }
 
 ChatMessage * ChatMessageLogout::clone() const
@@ -167,9 +188,9 @@ QJsonObject ChatMessageText::toJson() const
     return result;
 }
 
-QString ChatMessageText::type() const
+ChatMessage::Type ChatMessageText::type() const
 {
-    return QStringLiteral("message");
+    return TextType;
 }
 
 ChatMessage * ChatMessageText::clone() const
