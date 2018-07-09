@@ -2,6 +2,7 @@
 #include "chatmessage.h"
 
 #include <QDataStream>
+#include <QTcpSocket>
 
 #include <QJsonDocument>
 #include <QJsonParseError>
@@ -18,40 +19,61 @@ ChatSession::~ChatSession()
     delete m_socket;
 }
 
+QString ChatSession::lastError() const
+{
+    return m_lastError;
+}
+
 bool ChatSession::open(qintptr descriptor)
 {
-    m_socket = new QTcpSocket(this);
-    if (!m_socket->setSocketDescriptor(descriptor))  {
+    if (m_socket)
+        return false;
+
+    QTcpSocket * socket = new QTcpSocket(this);
+    if (!socket->setSocketDescriptor(descriptor))  {
         QMetaObject::invokeMethod(this, "closed", Qt::QueuedConnection);
         return false;
     }
 
-    initialize();
+    initialize(socket);
     return true;
 }
 
-bool ChatSession::open(QTcpSocket * channel)
+bool ChatSession::open(QTcpSocket * socket)
 {
-    Q_ASSERT(channel);
-    if (!channel)
+    Q_ASSERT(socket);
+    if (m_socket || !socket || !socket->isValid())
         return false;
 
-    m_socket = channel;
+    // Take ownership of the socket
+    socket->setParent(this);
 
-    initialize();
+    initialize(socket);
+    return true;
+}
+
+bool ChatSession::open(const QHostAddress & address, quint16 port)
+{
+    if (m_socket || address.isNull())
+        return false;
+
+    QTcpSocket * socket = new QTcpSocket(this);
+    socket->connectToHost(address, port);
+
+    initialize(socket);
     return true;
 }
 
 void ChatSession::close()
 {
-    if (m_socket && m_socket->isValid())
+    if (m_socket->isValid())
         m_socket->disconnectFromHost();
 }
 
 void ChatSession::send(const ChatMessage & message)
 {
     Q_ASSERT(m_socket);
-    if (!m_socket)
+    if (!m_socket->isValid())
         return;
 
     QDataStream stream(m_socket);
@@ -63,17 +85,6 @@ void ChatSession::send(const ChatMessagePointer & messagePointer)
     const ChatMessage * message = messagePointer.data();
     if (message)
         send(*message);
-}
-
-void ChatSession::initialize()
-{
-    m_lastError.clear();
-
-    QObject::connect(m_socket, &QTcpSocket::connected, this, &ChatSession::opened);
-    QObject::connect(m_socket, &QTcpSocket::disconnected, this, &ChatSession::closed);
-    QObject::connect(m_socket, &QTcpSocket::readyRead, this, &ChatSession::readData);
-    QObject::connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error), this, &ChatSession::setLastError);
-    QObject::connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error), this, &ChatSession::error);
 }
 
 void ChatSession::readData()
@@ -163,6 +174,20 @@ void ChatSession::setLastError(QAbstractSocket::SocketError error)
     }
 
     emit statusReport(m_lastError);
+}
+
+void ChatSession::initialize(QTcpSocket * socket)
+{
+    Q_ASSERT(!m_socket);
+    m_socket = socket;
+
+    QObject::connect(socket, &QTcpSocket::connected, this, &ChatSession::opened);
+    QObject::connect(socket, &QTcpSocket::disconnected, this, &ChatSession::closed);
+    QObject::connect(socket, &QTcpSocket::readyRead, this, &ChatSession::readData);
+    QObject::connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error), this, &ChatSession::setLastError);
+    QObject::connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error), this, &ChatSession::error);
+
+    QObject::connect(this, &ChatSession::closed, socket, &QObject::deleteLater);
 }
 
 void ChatSession::decodeJson(const QJsonObject & json)

@@ -7,6 +7,7 @@
 
 static QHash<QString, ChatMessage::Type> messageTypes = {
     { QStringLiteral("login"), ChatMessage::LoginType },
+    { QStringLiteral("login-status"), ChatMessage::LoginStatusType },
     { QStringLiteral("logout"), ChatMessage::LogoutType },
     { QStringLiteral("message"), ChatMessage::TextType }
 };
@@ -71,9 +72,62 @@ QString ChatMessageLogin::type() const
     return QStringLiteral("login");
 }
 
+ChatMessageLoginStatus::ChatMessageLoginStatus()
+    : m_status(Success)
+{
+}
+
+void ChatMessageLoginStatus::setStatus(Status status)
+{
+    m_status = status;
+}
+
+ChatMessageLoginStatus::Status ChatMessageLoginStatus::status() const
+{
+    return m_status;
+}
+
+void ChatMessageLoginStatus::setErrorText(const QString & errorText)
+{
+    m_errorText = errorText;
+}
+
+QString ChatMessageLoginStatus::errorText() const
+{
+    return m_errorText;
+}
+
+bool ChatMessageLoginStatus::fromJson(const QJsonObject & json)
+{
+    m_status = static_cast<Status>(json.value(QStringLiteral("status")).toInt());
+    m_errorText = json.value(QStringLiteral("errorText")).toString();
+
+    return m_status == Success || (m_status == Fail && !m_errorText.isEmpty());
+}
+
+QJsonObject ChatMessageLoginStatus::toJson() const
+{
+    QJsonObject json = ChatMessage::toJson();
+    json.insert(QStringLiteral("status"), static_cast<int>(m_status));
+    if (m_status == Fail)
+        json.insert(QStringLiteral("errorText"), m_errorText);
+
+    return json;
+}
+
 ChatMessage * ChatMessageLogin::clone() const
 {
     return new ChatMessageLogin(*this);
+}
+
+QString ChatMessageLoginStatus::type() const
+{
+    return QStringLiteral("login-status");
+}
+
+ChatMessage * ChatMessageLoginStatus::clone() const
+{
+    return new ChatMessageLoginStatus(*this);
 }
 
 QString ChatMessageLogout::type() const

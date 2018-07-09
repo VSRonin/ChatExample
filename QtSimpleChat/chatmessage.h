@@ -13,7 +13,7 @@ class QTSIMPLECHAT_EXPORT ChatMessage : public QSharedData
     friend ChatMessagePointer;
 
 public:
-    enum Type { UnknownType, LoginType, LogoutType, TextType };
+    enum Type { UnknownType, LoginType, LoginStatusType, LogoutType, TextType };
 
 public:
     ChatMessage() = default;
@@ -62,6 +62,33 @@ private:
 protected:
     QString type() const override;
     ChatMessage * clone() const override;
+};
+
+class QTSIMPLECHAT_EXPORT ChatMessageLoginStatus : public ChatMessage
+{
+public:
+    enum Status { Fail, Success };
+
+    ChatMessageLoginStatus();
+
+    void setStatus(Status);
+    Status status() const;
+
+    void setErrorText(const QString &);
+    QString errorText() const;
+
+    bool fromJson(const QJsonObject &) override;
+    QJsonObject toJson() const override;
+
+private:
+    ChatMessageLoginStatus(const ChatMessageLoginStatus &) = default;
+
+protected:
+    QString type() const override;
+    ChatMessage * clone() const override;
+
+    Status m_status;
+    QString m_errorText;
 };
 
 class QTSIMPLECHAT_EXPORT ChatMessageLogout : public ChatMessage

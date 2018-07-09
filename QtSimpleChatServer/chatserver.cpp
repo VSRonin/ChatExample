@@ -87,7 +87,6 @@ void ChatServer::openSessions()
         QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, session));
         QObject::connect(session, &ChatSession::closed, session, &ChatSession::deleteLater);
 
-
         // Connect all the existing clients to the new one
         for (ChatSessionList::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)  {
             QObject::connect(*i, &ChatSession::received, session, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
