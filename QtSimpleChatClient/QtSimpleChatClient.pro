@@ -1,3 +1,5 @@
+include(../QtSimpleChat.pri)
+
 QT += core network gui widgets
 
 TARGET = QtSimpleChatClient
@@ -5,22 +7,12 @@ TEMPLATE = app
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
-CONFIG(release, debug|release){
-    DESTDIR = release
-    OBJECTS_DIR = release/.obj
-    MOC_DIR = release/.moc
-    RCC_DIR = release/.rcc
-    UI_DIR = release/.ui
-}
-CONFIG(debug, debug|release){
-    DESTDIR = debug
-    OBJECTS_DIR = debug/.obj
-    MOC_DIR = debug/.moc
-    RCC_DIR = debug/.rcc
-    UI_DIR = debug/.ui
-}
+INCLUDEPATH += $$PWD/../QtSimpleChat
+LIBS += -L$$DESTDIR -lQtSimpleChat
 
-CONFIG += debug_and_release
+HEADERS += \
+    chatwindow.h \
+    chatclient.h
 
 SOURCES += \
     clientmain.cpp \
@@ -29,7 +21,3 @@ SOURCES += \
 
 FORMS += \
     chatwindow.ui
-
-HEADERS += \
-    chatwindow.h \
-    chatclient.h
