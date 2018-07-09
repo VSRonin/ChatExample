@@ -4,23 +4,23 @@
 #include "chatserver.h"
 
 ServerWindow::ServerWindow(QWidget * parent)
-    : QWidget(parent), ui(new Ui::ServerWindow)
+    : QWidget(parent)
 {
-    ui->setupUi(this);
-    QObject::connect(ui->startStopButton, &QPushButton::clicked, this, &ServerWindow::toggleServer);
+    ui.setupUi(this);
+    QObject::connect(ui.startStopButton, &QPushButton::clicked, this, &ServerWindow::toggleServer);
 }
 
 void ServerWindow::serverStarted()
 {
-    ui->startStopButton->setText(tr("Stop Server"));
+    ui.startStopButton->setText(tr("Stop Server"));
 }
 
 void ServerWindow::serverStopped()
 {
-    ui->startStopButton->setText(tr("Start Server"));
+    ui.startStopButton->setText(tr("Start Server"));
 }
 
 void ServerWindow::logMessage(const QString & msg)
 {
-    ui->logEditor->appendPlainText(msg + '\n');
+    ui.logEditor->appendPlainText(msg + '\n');
 }

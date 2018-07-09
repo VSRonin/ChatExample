@@ -2,12 +2,9 @@
 #define SERVERWINDOW_H
 
 #include "qtsimplechat.h"
+#include "ui_serverwindow.h"
 
 #include <QWidget>
-
-namespace Ui {
-    class ServerWindow;
-}
 
 class ChatServer;
 class ServerWindow : public QWidget
@@ -27,7 +24,7 @@ public slots:
     void serverStarted();
 
 private:
-    Ui::ServerWindow * ui;
+    Ui::ServerWindow ui;
 };
 
 #endif // SERVERWINDOW_H
