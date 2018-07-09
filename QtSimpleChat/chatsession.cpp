@@ -17,7 +17,7 @@ bool ChatSession::open(qintptr descriptor)
 {
     socket = new QTcpSocket(this);
     if (!socket->setSocketDescriptor(descriptor))  {
-        QMetaObject::invokeMethod(this, &ChatSession::closed, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, "closed", Qt::QueuedConnection);
         return false;
     }
 
