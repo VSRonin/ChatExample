@@ -93,6 +93,11 @@ ChatMessage::Type ChatMessageLogin::type() const
     return LoginType;
 }
 
+ChatMessage * ChatMessageLogin::clone() const
+{
+    return new ChatMessageLogin(*this);
+}
+
 ChatMessageLoginStatus::ChatMessageLoginStatus()
     : m_status(Success)
 {
@@ -120,6 +125,9 @@ QString ChatMessageLoginStatus::errorText() const
 
 bool ChatMessageLoginStatus::fromJson(const QJsonObject & json)
 {
+    if (!ChatMessage::fromJson(json))
+        return false;
+
     m_status = static_cast<Status>(json.value(QStringLiteral("status")).toInt());
     m_errorText = json.value(QStringLiteral("errorText")).toString();
 
@@ -134,11 +142,6 @@ QJsonObject ChatMessageLoginStatus::toJson() const
         json.insert(QStringLiteral("errorText"), m_errorText);
 
     return json;
-}
-
-ChatMessage * ChatMessageLogin::clone() const
-{
-    return new ChatMessageLogin(*this);
 }
 
 ChatMessage::Type ChatMessageLoginStatus::type() const
