@@ -70,21 +70,18 @@ void ChatSession::close()
         m_socket->disconnectFromHost();
 }
 
-void ChatSession::send(const ChatMessage & message)
+void ChatSession::send(const ChatMessagePointer & messagePointer)
 {
     Q_ASSERT(m_socket);
     if (!m_socket->isValid())
         return;
 
-    QDataStream stream(m_socket);
-    stream << QJsonDocument(message.toJson()).toJson();
-}
-
-void ChatSession::send(const ChatMessagePointer & messagePointer)
-{
     const ChatMessage * message = messagePointer.data();
-    if (message)
-        send(*message);
+    if (!message)
+        return;
+
+    QDataStream stream(m_socket);
+    stream << QJsonDocument(message->toJson()).toJson();
 }
 
 void ChatSession::readData()

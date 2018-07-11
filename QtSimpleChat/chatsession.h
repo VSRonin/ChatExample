@@ -28,7 +28,6 @@ public slots:
     bool open(QTcpSocket *);
     bool open(const QHostAddress &, quint16 = 0);
     void close();
-    void send(const ChatMessage &);
     void send(const ChatMessagePointer &);
 
 signals:

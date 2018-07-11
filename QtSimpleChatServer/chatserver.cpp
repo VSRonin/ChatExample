@@ -103,15 +103,15 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
 
             QString username = loginMessage->username();
 
-            ChatMessageLoginStatus statusMessage;
-            statusMessage.setUsername(username);
+            ChatMessageLoginStatus * statusMessage = new ChatMessageLoginStatus();
+            statusMessage->setUsername(username);
 
             if (participants.contains(username))  {
-                statusMessage.setStatus(ChatMessageLoginStatus::Fail);
-                statusMessage.setErrorText(QStringLiteral("Username already in use"));
+                statusMessage->setStatus(ChatMessageLoginStatus::Fail);
+                statusMessage->setErrorText(QStringLiteral("Username already in use"));
             }
             else  {
-                statusMessage.setStatus(ChatMessageLoginStatus::Success);
+                statusMessage->setStatus(ChatMessageLoginStatus::Success);
 
                 // Unregister the client if the connection is closed prematurely
                 QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, username));
@@ -125,7 +125,8 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
                 participants.insert(username, session);
             }
 
-            session->send(statusMessage);
+            QMetaObject::invokeMethod(session, "send", Qt::QueuedConnection, Q_ARG(ChatMessagePointer, ChatMessagePointer(statusMessage)));
+//            session->send(statusMessage);
         }
         break;
     case ChatMessage::LogoutType:
@@ -134,8 +135,9 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
 
             QString username = logoutMessage->username();
             ChatSession * session = participants.value(username, nullptr);
-            if (session)
-                session->close();
+
+            Q_ASSERT(session);
+            QMetaObject::invokeMethod(session, "close", Qt::QueuedConnection);
         }
         break;
     default:

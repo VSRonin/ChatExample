@@ -53,9 +53,9 @@ void ChatWindow::connectedToServer()
     m_username = newUsername;
 
     // Log into the server with the selected user name
-    ChatMessageLogin message;
-    message.setUsername(m_username);
-    m_session.send(message);
+    ChatMessageLogin * message = new ChatMessageLogin();
+    message->setUsername(m_username);
+    m_session.send(ChatMessagePointer(message));
 }
 
 void ChatWindow::sendMessage()
@@ -67,10 +67,10 @@ void ChatWindow::sendMessage()
     // Get the message text
     const QString messageText = ui.messageEdit->text();
     // We send the message that the user typed
-    ChatMessageText message;
-    message.setUsername(m_username);
-    message.setText(messageText);
-    m_session.send(message);
+    ChatMessageText * message = new ChatMessageText();
+    message->setUsername(m_username);
+    message->setText(messageText);
+    m_session.send(ChatMessagePointer(message));
     // Now we add our own message to the list
     addMessage(messageText, Qt::AlignRight | Qt::AlignVCenter);
     // Clear the content of the message editor
@@ -91,19 +91,20 @@ void ChatWindow::error()
 
 void ChatWindow::messageReceived(const ChatMessagePointer & message)
 {
+    Q_ASSERT(message.data());
     switch (message->type())
     {
     case ChatMessage::LoginType:
-        logInReceived(*dynamic_cast<const ChatMessageLogin *>(message.data()));
+        logInReceived(*reinterpret_cast<const ChatMessageLogin *>(message.data()));
         return;
     case ChatMessage::LoginStatusType:
-        logInStatusReceived(*dynamic_cast<const ChatMessageLoginStatus *>(message.data()));
+        logInStatusReceived(*reinterpret_cast<const ChatMessageLoginStatus *>(message.data()));
         return;
     case ChatMessage::LogoutType:
-        logOutReceived(*dynamic_cast<const ChatMessageLogout *>(message.data()));
+        logOutReceived(*reinterpret_cast<const ChatMessageLogout *>(message.data()));
         return;
     case ChatMessage::TextType:
-        textReceived(*dynamic_cast<const ChatMessageText *>(message.data()));
+        textReceived(*reinterpret_cast<const ChatMessageText *>(message.data()));
         return;
     default:
         return;

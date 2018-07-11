@@ -3,6 +3,7 @@
 #include <QVector>
 #include <QHash>
 #include <QString>
+#include <QMetaType>
 
 #include <QJsonObject>
 #include <QJsonValue>
@@ -34,6 +35,8 @@ MessageTypes::MessageTypes()
 
     for (qint32 i = 0; i < size; i++)
         stringToType.insert(typeToString.at(i), static_cast<ChatMessage::Type>(i));
+
+    qRegisterMetaType<ChatMessagePointer>("ChatMessagePointer");
 }
 
 inline QString MessageTypes::toString(int type)
