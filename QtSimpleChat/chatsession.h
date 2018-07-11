@@ -27,7 +27,6 @@ public slots:
     bool open(qintptr);
     bool open(QTcpSocket *);
     bool open(const QHostAddress &, quint16 = 0);
-    bool open(const QString &, quint16 = 0);
     void close();
     void send(const ChatMessage &);
     void send(const ChatMessagePointer &);
@@ -51,10 +50,5 @@ private:
     QPointer<QTcpSocket> m_socket;
     QString m_lastError;
 };
-
-inline bool ChatSession::open(const QString & address, quint16 port)
-{
-    return open(QHostAddress(address), port);
-}
 
 #endif // CHATSESSION_H

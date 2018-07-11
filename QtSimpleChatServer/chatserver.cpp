@@ -6,16 +6,10 @@
 
 #include <QDebug>
 
-ChatServer::ChatServer(QObject * parent)
-    : QTcpServer(parent), listenPort(0)
+ChatServer::ChatServer(quint16 port, QObject * parent)
+    : QTcpServer(parent), listenPort(port)
 {
     QObject::connect(this, &QTcpServer::newConnection, this, &ChatServer::openSessions);
-}
-
-ChatServer::ChatServer(quint16 port, QObject * parent)
-    : ChatServer(parent)
-{
-    setPort(port);
 }
 
 quint16 ChatServer::port() const

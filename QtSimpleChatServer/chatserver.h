@@ -15,8 +15,7 @@ class ChatServer : public QTcpServer
     typedef QHash<QString, ChatSession *> ChatSessionHash;
 
 public:
-    explicit ChatServer(QObject * parent = nullptr);
-    explicit ChatServer(quint16, QObject * parent = nullptr);
+    explicit ChatServer(quint16 = 0, QObject * parent = nullptr);
 
     quint16 port() const;
     void setPort(quint16);
