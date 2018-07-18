@@ -24,6 +24,7 @@ public slots:
     void start();
     void stop();
     void toggle(); // Start/stop
+    void broadcast(const ChatMessagePointer &);
 
 signals:
     void started();
@@ -34,6 +35,7 @@ signals:
     void messageReceived(const ChatMessagePointer &);
 
 private slots:
+    void send(ChatSession *, const ChatMessagePointer &);
     void openSessions();
     void closeSession(const QString &);
     void processMessage(ChatSession *, const ChatMessagePointer &);

@@ -89,8 +89,15 @@ void ChatServer::openSessions()
 void ChatServer::closeSession(const QString & username)
 {
     // Just remove the closing session from the participants list
-    if (participants.remove(username))
-        emit statusReport(QStringLiteral("A client has disconnected"));
+    if (!participants.remove(username))
+        return;
+
+    emit statusReport(QStringLiteral("A client has disconnected"));
+
+    // Notify the other participants a client has quit
+    ChatMessagePointer logoutMessage(new ChatMessageLogout());
+    logoutMessage->setUsername(username);
+    broadcast(logoutMessage);
 }
 
 void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer & message)
@@ -121,12 +128,16 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
                     QObject::connect(session, &ChatSession::received, *i, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
                 }
 
+                // Notify the other participants we have a new client connected
+                ChatMessagePointer loginMessage(new ChatMessageLogin());
+                loginMessage->setUsername(username);
+                broadcast(loginMessage);
+
                 // Insert the session into the active participants
                 participants.insert(username, session);
             }
 
-            QMetaObject::invokeMethod(session, "send", Qt::QueuedConnection, Q_ARG(ChatMessagePointer, ChatMessagePointer(statusMessage)));
-//            session->send(statusMessage);
+            send(session, ChatMessagePointer(statusMessage));
         }
         break;
     case ChatMessage::LogoutType:
@@ -144,3 +155,16 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
         ;
     }
 }
+
+inline void ChatServer::broadcast(const ChatMessagePointer & message)
+{
+    for (ChatSessionHash::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)
+        send(i.value(), message);
+}
+
+inline void ChatServer::send(ChatSession * session, const ChatMessagePointer & message)
+{
+    QMetaObject::invokeMethod(session, "send", Qt::QueuedConnection, Q_ARG(ChatMessagePointer, message));
+}
+
+

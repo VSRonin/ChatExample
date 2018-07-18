@@ -141,7 +141,7 @@ void ChatWindow::logOutReceived(const ChatMessageLogout & message)
 
 void ChatWindow::textReceived(const ChatMessageText & message)
 {
-    addMessage(QStringLiteral("%1: %2").arg(message.username()).arg(message.text()), Qt::AlignLeft | Qt::AlignVCenter);
+    addMessage(QStringLiteral("%1: %2").arg(message.username(), message.text()), Qt::AlignLeft | Qt::AlignVCenter);
 }
 
 void ChatWindow::addMessage(const QString & data, Qt::Alignment alignment, const QBrush & color)
