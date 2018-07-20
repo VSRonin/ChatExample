@@ -11,7 +11,7 @@ namespace Ui
 }
 
 class ChatServer;
-class ServerWindow : public QWidget
+class QTSIMPLECHAT_EXPORT ServerWindow : public QWidget
 {
     Q_OBJECT
     Q_DISABLE_COPY(ServerWindow)
