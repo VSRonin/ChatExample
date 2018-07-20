@@ -7,7 +7,7 @@
 #include <QHash>
 
 class ChatSession;
-class ChatServer : public QTcpServer
+class QTSIMPLECHAT_EXPORT ChatServer : public QTcpServer
 {
     Q_OBJECT
     Q_DISABLE_COPY(ChatServer)
@@ -39,6 +39,9 @@ private slots:
     void openSessions();
     void closeSession(const QString &);
     void processMessage(ChatSession *, const ChatMessagePointer &);
+
+protected:
+    ChatSession * createSession();
 
 private:
     quint16 listenPort;

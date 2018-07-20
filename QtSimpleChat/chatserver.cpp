@@ -61,26 +61,17 @@ void ChatServer::toggle()
         start();
 }
 
-
 void ChatServer::openSessions()
 {
-    while (hasPendingConnections()) {
-        // Create a user session for each pending connection
-        ChatSession * session = new ChatSession(this);
+    while (hasPendingConnections())  {
+        ChatSession * session = createSession();
+
+        // Get the next pending connection & try to open the session
         QTcpSocket * socket = nextPendingConnection();
         if (!session->open(socket))  {
             emit statusReport(QStringLiteral("Couldn't initialize client session."));
             continue;
         }
-
-        // Log the received messages & status (delegate the signals)
-        QObject::connect(session, &ChatSession::statusReport, this, &ChatServer::statusReport);
-        QObject::connect(session, &ChatSession::received, this, &ChatServer::messageReceived);
-        QObject::connect(session, &ChatSession::received, this, std::bind(&ChatServer::processMessage, this, session, std::placeholders::_1));
-
-        // Take care of the cleaning up
-        QObject::connect(this, &ChatServer::aboutToStop, session, &ChatSession::close);
-        QObject::connect(session, &ChatSession::closed, session, &ChatSession::deleteLater);
 
         emit statusReport(QStringLiteral("A client has connected"));
     }
@@ -165,6 +156,23 @@ void ChatServer::broadcast(const ChatMessagePointer & message)
 void ChatServer::send(ChatSession * session, const ChatMessagePointer & message)
 {
     QMetaObject::invokeMethod(session, "send", Qt::QueuedConnection, Q_ARG(ChatMessagePointer, message));
+}
+
+ChatSession * ChatServer::createSession()
+{
+    // Create a and initialize a user session
+    ChatSession * session = new ChatSession(this);
+
+    // Log the received messages & status (delegate the signals)
+    QObject::connect(session, &ChatSession::statusReport, this, &ChatServer::statusReport);
+    QObject::connect(session, &ChatSession::received, this, &ChatServer::messageReceived);
+    QObject::connect(session, &ChatSession::received, this, std::bind(&ChatServer::processMessage, this, session, std::placeholders::_1));
+
+    // Take care of the cleaning up
+    QObject::connect(this, &ChatServer::aboutToStop, session, &ChatSession::close);
+    QObject::connect(session, &ChatSession::closed, session, &ChatSession::deleteLater);
+
+    return session;
 }
 
 
