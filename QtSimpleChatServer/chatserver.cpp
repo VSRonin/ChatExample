@@ -156,13 +156,13 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
     }
 }
 
-inline void ChatServer::broadcast(const ChatMessagePointer & message)
+void ChatServer::broadcast(const ChatMessagePointer & message)
 {
     for (ChatSessionHash::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)
         send(i.value(), message);
 }
 
-inline void ChatServer::send(ChatSession * session, const ChatMessagePointer & message)
+void ChatServer::send(ChatSession * session, const ChatMessagePointer & message)
 {
     QMetaObject::invokeMethod(session, "send", Qt::QueuedConnection, Q_ARG(ChatMessagePointer, message));
 }
