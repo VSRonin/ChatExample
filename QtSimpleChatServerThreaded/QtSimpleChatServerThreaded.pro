@@ -18,6 +18,3 @@ SOURCES += \
 HEADERS += \
     chatserverthreaded.h \
     threadpool.h
-
-FORMS += \
-    serverwindow.ui
