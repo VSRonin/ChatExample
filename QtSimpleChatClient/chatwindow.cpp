@@ -51,6 +51,8 @@ void ChatWindow::connectedToServer()
 
     // Store the selected user name
     m_username = newUsername;
+    // Reset the last printed username
+    m_lastUserName.clear();
 
     // Log into the server with the selected user name
     ChatMessageLogin * message = new ChatMessageLogin();
@@ -87,6 +89,8 @@ void ChatWindow::error()
     ui.sendButton->setEnabled(false);
     ui.messageEdit->setEnabled(false);
     ui.chatView->setEnabled(false);
+    // Reset the last printed username
+    m_lastUserName.clear();
 }
 
 void ChatWindow::messageReceived(const ChatMessagePointer & message)
@@ -113,6 +117,8 @@ void ChatWindow::messageReceived(const ChatMessagePointer & message)
 
 void ChatWindow::logInReceived(const ChatMessageLogin & message)
 {
+    // Reset the last printed username
+    m_lastUserName.clear();
     // Store in the model the message to comunicate a user joined
     addMessage(tr("%1 Joined the Chat").arg(message.username()), Qt::AlignCenter, Qt::blue);
 }
@@ -124,6 +130,9 @@ void ChatWindow::logInStatusReceived(const ChatMessageLoginStatus & message)
         ui.sendButton->setEnabled(true);
         ui.messageEdit->setEnabled(true);
         ui.chatView->setEnabled(true);
+
+        // Reset the last printed username
+        m_lastUserName.clear();
     }
     else  {
         // The server rejected the login attempt, display the reason for the rejection in a message box
@@ -135,16 +144,26 @@ void ChatWindow::logInStatusReceived(const ChatMessageLoginStatus & message)
 
 void ChatWindow::logOutReceived(const ChatMessageLogout & message)
 {
+    // Reset the last printed username
+    m_lastUserName.clear();
     // Store in the model the message to comunicate a user left
     addMessage(tr("%1 Left the Chat").arg(message.username()), Qt::AlignCenter, Qt::blue);
+
 }
 
 void ChatWindow::textReceived(const ChatMessageText & message)
 {
-    addMessage(QStringLiteral("%1: %2").arg(message.username(), message.text()), Qt::AlignLeft | Qt::AlignVCenter);
+    if (message.username() != m_lastUserName)  {
+        m_lastUserName = message.username();
+
+        QFont boldFont;
+        boldFont.setBold(true);
+        addMessage(QStringLiteral("%1:").arg(m_lastUserName), Qt::AlignLeft | Qt::AlignVCenter, Qt::black, boldFont);
+    }
+    addMessage(QStringLiteral("%1").arg(message.text()), Qt::AlignLeft | Qt::AlignVCenter);
 }
 
-void ChatWindow::addMessage(const QString & data, Qt::Alignment alignment, const QBrush & color)
+void ChatWindow::addMessage(const QString & data, Qt::Alignment alignment, const QBrush & color, const QFont & font)
 {
     // Store the index of the new row to append to the model containing the messages
     const int newRow = m_chatModel.rowCount();
@@ -157,6 +176,8 @@ void ChatWindow::addMessage(const QString & data, Qt::Alignment alignment, const
     m_chatModel.setData(row, data);
     // Set the alignment for the text
     m_chatModel.setData(row, QVariant::fromValue<int>(alignment), Qt::TextAlignmentRole);
+    // Set the font for the text
+    m_chatModel.setData(row, font, Qt::FontRole);
     // Set the color for the text
     m_chatModel.setData(row, color, Qt::ForegroundRole);
 

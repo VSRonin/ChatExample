@@ -35,14 +35,14 @@ private:
     void logOutReceived(const ChatMessageLogout &);
     void textReceived(const ChatMessageText &);
 
-    void addMessage(const QString &, Qt::Alignment, const QBrush & = QBrush(Qt::black));
+    void addMessage(const QString &, Qt::Alignment, const QBrush & = QBrush(Qt::black), const QFont & = QFont());
 
 private:
     Ui::ChatWindow ui;
     QStandardItemModel m_chatModel;
     ChatSession m_session;
     QTcpSocket * m_socket;
-    QString m_username;
+    QString m_username, m_lastUserName;
 };
 
 #endif // CHATWINDOW_H
