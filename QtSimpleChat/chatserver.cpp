@@ -112,9 +112,9 @@ void ChatServer::processMessage(ChatSession * session, const ChatMessagePointer 
                 statusMessage->setStatus(ChatMessageLoginStatus::Success);
 
                 // Unregister the client if the connection is closed prematurely
-                // NOTE: Use a blocking connection, because we update the list of participants in closeSession()
-                // thus we are subject to the object being destroyed before unregistered from the list
-                QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, username), Qt::BlockingQueuedConnection);
+                // NOTE: Use a blocking connection when we are threaded, because we may update something (e.g. the participants list)
+                // in closeSession() thus we are subject to the object being destroyed before the update taking place.
+                QObject::connect(session, &ChatSession::closed, this, std::bind(&ChatServer::closeSession, this, username), session->thread() == thread() ? Qt::AutoConnection : Qt::BlockingQueuedConnection);
                 // Connect all the existing clients to the new one
                 for (ChatSessionHash::ConstIterator i = participants.constBegin(), end = participants.constEnd(); i != end; ++i)  {
                     QObject::connect(*i, &ChatSession::received, session, QOverload<const ChatMessagePointer &>::of(&ChatSession::send));
