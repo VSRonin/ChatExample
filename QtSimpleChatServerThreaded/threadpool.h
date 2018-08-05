@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QVector>
 #include <QThread>
-#include <QSemaphore>
 
 class ThreadPool : public QObject
 {
@@ -26,7 +25,6 @@ private:
 
     QVector<QThread *> m_threads;
     QVector<QAtomicInt> m_threadsLoad;
-    QSemaphore m_shutdownBarrier;
 };
 
 #endif // THREADPOOL_H

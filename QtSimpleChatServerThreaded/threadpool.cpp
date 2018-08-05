@@ -7,11 +7,6 @@ ThreadPool::ThreadPool(int numberOfThreads, QObject * parent)
         // Create and initialize a worker thread for the pool
         QThread * thread = new QThread(this);
 
-        // Whenever a thread quits release one to the semaphore, so when all of them are finished we can shutdown safely
-        QObject::connect(thread, &QThread::finished, [this] () -> void {
-            m_shutdownBarrier.release();
-        });
-
         // Start the thread
         thread->start();
 
@@ -29,7 +24,8 @@ ThreadPool::~ThreadPool()
         (*i)->quit();
 
     // Wait for all the threads to actually quit before returning
-    m_shutdownBarrier.acquire(m_threads.size());
+    for (QVector<QThread *>::ConstIterator i = m_threads.constBegin(), end = m_threads.constEnd(); i != end; ++i)
+        (*i)->wait();
 }
 
 void ThreadPool::moveObject(QObject * worker)
