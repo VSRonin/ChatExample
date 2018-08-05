@@ -68,6 +68,9 @@ void ChatWindow::sendMessage()
 
     // Get the message text
     const QString messageText = ui.messageEdit->text();
+    // If the user didn't type anything just ignore the whole thing
+    if (messageText.isEmpty())
+        return;
     // We send the message that the user typed
     ChatMessageText * message = new ChatMessageText();
     message->setUsername(m_username);
