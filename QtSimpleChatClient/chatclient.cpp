@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+
 ChatClient::ChatClient(QObject *parent)
     : QObject(parent)
     , m_clientSocket(new QTcpSocket(this))
@@ -33,7 +34,7 @@ void ChatClient::login(const QString &userName)
         message["type"] = QStringLiteral("login");
         message["username"] = userName;
         // send the JSON using QDataStream
-        clientStream << QJsonDocument(message).toJson();
+        clientStream << QJsonDocument(message).toJson(QJsonDocument::Compact);
     }
 }
 
