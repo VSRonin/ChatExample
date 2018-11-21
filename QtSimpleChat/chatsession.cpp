@@ -66,7 +66,7 @@ bool ChatSession::open(const QHostAddress & address, quint16 port)
 
 void ChatSession::close()
 {
-    if (m_socket->isValid())
+    if (m_socket && m_socket->isValid())
         m_socket->disconnectFromHost();
 }
 
@@ -87,7 +87,6 @@ void ChatSession::send(const ChatMessagePointer & messagePointer)
 void ChatSession::readData()
 {
     QDataStream stream(m_socket);
-
     while (true) {
         // Read the JSON data
         stream.startTransaction();
