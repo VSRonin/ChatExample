@@ -45,7 +45,7 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
     connect(worker, &ServerWorker::jsonReceived, this, std::bind(&ChatServer::jsonReceived, this, worker, std::placeholders::_1));
     connect(this, &ChatServer::stopAllClients, worker, &ServerWorker::disconnectFromClient);
     m_clients.append(worker);
-    emit logMessage("New client Connected");
+    emit logMessage(QStringLiteral("New client Connected"));
 }
 void ChatServer::sendJson(ServerWorker *destination, const QJsonObject &message)
 {
@@ -65,7 +65,7 @@ void ChatServer::broadcast(const QJsonObject &message, ServerWorker *exclude)
 void ChatServer::jsonReceived(ServerWorker *sender, const QJsonObject &json)
 {
     Q_ASSERT(sender);
-    emit logMessage("JSON received " + QString::fromUtf8(QJsonDocument(json).toJson()));
+    emit logMessage(QLatin1String("JSON received ") + QString::fromUtf8(QJsonDocument(json).toJson()));
     if (sender->userName().isEmpty())
         return jsonFromLoggedOut(sender, json);
     jsonFromLoggedIn(sender, json);
@@ -78,10 +78,10 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
     const QString userName = sender->userName();
     if (!userName.isEmpty()) {
         QJsonObject disconnectedMessage;
-        disconnectedMessage["type"] = QStringLiteral("userdisconnected");
-        disconnectedMessage["username"] = userName;
+        disconnectedMessage[QStringLiteral("type")] = QStringLiteral("userdisconnected");
+        disconnectedMessage[QStringLiteral("username")] = userName;
         broadcast(disconnectedMessage, nullptr);
-        emit logMessage(userName + " disconnected");
+        emit logMessage(userName + QLatin1String(" disconnected"));
     }
     sender->deleteLater();
 }
@@ -89,7 +89,7 @@ void ChatServer::userDisconnected(ServerWorker *sender, int threadIdx)
 void ChatServer::userError(ServerWorker *sender)
 {
     Q_UNUSED(sender)
-    emit logMessage("Error from " + sender->userName());
+    emit logMessage(QLatin1String("Error from ") + sender->userName());
 }
 
 void ChatServer::stopServer()
@@ -117,21 +117,21 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &docO
             continue;
         if (worker->userName().compare(newUserName, Qt::CaseInsensitive) == 0) {
             QJsonObject message;
-            message["type"] = QStringLiteral("login");
-            message["success"] = false;
-            message["reason"] = QStringLiteral("duplicate username");
+            message[QStringLiteral("type")] = QStringLiteral("login");
+            message[QStringLiteral("success")] = false;
+            message[QStringLiteral("reason")] = QStringLiteral("duplicate username");
             sendJson(sender, message);
             return;
         }
     }
     sender->setUserName(newUserName);
     QJsonObject successMessage;
-    successMessage["type"] = QStringLiteral("login");
-    successMessage["success"] = true;
+    successMessage[QStringLiteral("type")] = QStringLiteral("login");
+    successMessage[QStringLiteral("success")] = true;
     sendJson(sender, successMessage);
     QJsonObject connectedMessage;
-    connectedMessage["type"] = QStringLiteral("newuser");
-    connectedMessage["username"] = newUserName;
+    connectedMessage[QStringLiteral("type")] = QStringLiteral("newuser");
+    connectedMessage[QStringLiteral("username")] = newUserName;
     broadcast(connectedMessage, sender);
 }
 
@@ -150,9 +150,9 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonObject &docOb
     if (text.isEmpty())
         return;
     QJsonObject message;
-    message["type"] = QStringLiteral("message");
-    message["text"] = text;
-    message["sender"] = sender->userName();
+    message[QStringLiteral("type")] = QStringLiteral("message");
+    message[QStringLiteral("text")] = text;
+    message[QStringLiteral("sender")] = sender->userName();
     broadcast(message, sender);
 }
 

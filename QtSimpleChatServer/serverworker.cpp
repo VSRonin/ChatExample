@@ -27,7 +27,7 @@ void ServerWorker::sendJson(const QJsonObject &json)
     // to its UTF-8 encoded version. We use QJsonDocument::Compact to save bandwidth
     const QByteArray jsonData = QJsonDocument(json).toJson(QJsonDocument::Compact);
     // we notify the central server we are about to send the message
-    emit logMessage("Sending to " + userName() + " - " + QString::fromUtf8(jsonData));
+    emit logMessage(QLatin1String("Sending to ") + userName() + QLatin1String(" - ") + QString::fromUtf8(jsonData));
     // we send the message to the socket in the exact same way we did in the client
     QDataStream socketStream(m_serverSocket);
     socketStream.setVersion(QDataStream::Qt_5_7);
@@ -74,9 +74,9 @@ void ServerWorker::receiveJson()
                 if (jsonDoc.isObject()) // and is a JSON object
                     emit jsonReceived(jsonDoc.object()); // send the message to the central server
                 else
-                    emit logMessage("Invalid message: " + QString::fromUtf8(jsonData)); //notify the server of invalid data
+                    emit logMessage(QLatin1String("Invalid message: ") + QString::fromUtf8(jsonData)); //notify the server of invalid data
             } else {
-                emit logMessage("Invalid message: " + QString::fromUtf8(jsonData)); //notify the server of invalid data
+                emit logMessage(QLatin1String("Invalid message: ") + QString::fromUtf8(jsonData)); //notify the server of invalid data
             }
              // loop and try to read more JSONs if they are available
         } else {

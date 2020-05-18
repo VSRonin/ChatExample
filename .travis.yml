@@ -8,51 +8,98 @@ branches:
   - master
   - commonlib
 
-matrix:
- fast_finish: true
- include:
-  - os: linux
-    dist: trusty
-    sudo: required
+jobs:
+  fast_finish: true
+  include:
+  - name: Ubuntu CMake
+    os: linux
+    dist: bionic
+    group: stable
     compiler: gcc
-    env:
-      - QTVERSIONMINOR=59 QTVERSIONPATCH=595
-  - os: osx
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        - sourceline: 'ppa:beineri/opt-qt-5.14.2-bionic'
+        update: true
+        packages:
+        - qt514base
+        - qt514tools
+        - gcc-9
+        - g++-9
+        - libc6-i386
+        - libgl-dev
+        - libgl1-mesa-dev
+        - mesa-common-dev
+    script:
+        - PATH="/opt/qt514/bin:$PATH"
+        - CXX="g++-9"
+        - CC="gcc-9"
+        - qt514-env.sh
+        - mkdir ./build
+        - cd ./build
+        - cmake --version
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ../
+        - cmake --build .
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=d ../
+        - cmake --build .
+  - name: Ubuntu QMake
+    os: linux
+    dist: bionic
+    group: stable
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        - sourceline: 'ppa:beineri/opt-qt-5.14.2-bionic'
+        update: true
+        packages:
+        - qt514base
+        - qt514tools
+        - gcc-9
+        - g++-9
+        - libc6-i386
+        - libgl-dev
+        - libgl1-mesa-dev
+        - mesa-common-dev
+    script:
+        - PATH="/opt/qt514/bin:$PATH"
+        - CXX="g++-9"
+        - CC="gcc-9"
+        - qt514-env.sh
+        - qmake QtSimpleChat.pro
+        - make
+  - name: MacOS QMake
+    os: osx
+    osx_image: xcode11.3
     compiler: clang
-
-install:
-  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-         lsb_release -a
-      && sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
-      && sudo apt-add-repository -y ppa:beineri/opt-qt${QTVERSIONPATCH}-trusty
-      && sudo apt-get -qq update
-      && sudo apt-get -qq install g++-6 libc6-i386 qt${QTVERSIONMINOR}base qt${QTVERSIONMINOR}tools 
-      && export CXX="g++-6"
-      && export CC="gcc-6"
-      ;
-    else
-         brew update > /dev/null
-      && brew install qt5
-      && chmod -R 755 /usr/local/opt/qt5/*
-      ;
-    fi
-
-script:
-- if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-         QTDIR="/opt/qt${QTVERSIONMINOR}"
-      && PATH="$QTDIR/bin:$PATH"
-      && qt${QTVERSIONMINOR}-env.sh
-      ;
-    else
-         QTDIR="/usr/local/opt/qt5"
-      && PATH="$QTDIR/bin:$PATH"
-      && PATH="$QTDIR/lib:$PATH"
-      && LDFLAGS=-L$QTDIR/lib
-      && CPPFLAGS=-I$QTDIR/include
-      ;
-    fi
-- qmake QtSimpleChat.pro
-- make
-
+    addons:
+      homebrew:
+        packages:
+        - qt
+        update: true
+    script:
+        - PATH="/usr/local/opt/qt5/bin:$PATH"
+        - qmake QtSimpleChat.pro
+        - make
+  - name: MacOS CMake
+    os: osx
+    osx_image: xcode11.3
+    compiler: clang
+    addons:
+      homebrew:
+        packages:
+        - qt
+        update: true
+    script:
+        - PATH="/usr/local/opt/qt5/bin:$PATH"
+        - mkdir ./build
+        - cd ./build
+        - cmake --version
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ../
+        - cmake --build .
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=d ../
+        - cmake --build .
 notifications:
   email: false

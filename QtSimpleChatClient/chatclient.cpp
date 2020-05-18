@@ -31,8 +31,8 @@ void ChatClient::login(const QString &userName)
         clientStream.setVersion(QDataStream::Qt_5_7);
         // Create the JSON we want to send
         QJsonObject message;
-        message["type"] = QStringLiteral("login");
-        message["username"] = userName;
+        message[QStringLiteral("type")] = QStringLiteral("login");
+        message[QStringLiteral("username")] = userName;
         // send the JSON using QDataStream
         clientStream << QJsonDocument(message).toJson(QJsonDocument::Compact);
     }
@@ -48,8 +48,8 @@ void ChatClient::sendMessage(const QString &text)
     clientStream.setVersion(QDataStream::Qt_5_7);
     // Create the JSON we want to send
     QJsonObject message;
-    message["type"] = QStringLiteral("message");
-    message["text"] = text;
+    message[QStringLiteral("type")] = QStringLiteral("message");
+    message[QStringLiteral("text")] = text;
     // send the JSON using QDataStream
     clientStream << QJsonDocument(message).toJson();
 }

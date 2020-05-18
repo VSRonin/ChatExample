@@ -108,7 +108,7 @@ void ChatWindow::messageReceived(const QString &sender, const QString &text)
         // insert 2 row, one for the message and one for the username
         m_chatModel->insertRows(newRow, 2);
         // store the username in the model
-        m_chatModel->setData(m_chatModel->index(newRow, 0), sender + ':');
+        m_chatModel->setData(m_chatModel->index(newRow, 0), sender + QLatin1Char(':'));
         // set the alignment for the username
         m_chatModel->setData(m_chatModel->index(newRow, 0), int(Qt::AlignLeft | Qt::AlignVCenter), Qt::TextAlignmentRole);
         // set the for the username
