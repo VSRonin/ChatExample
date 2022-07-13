@@ -12,14 +12,17 @@ ChatClient::ChatClient(QObject *parent)
     , m_loggedIn(false)
 {
     // Forward the connected and disconnected signals
-    connect(m_clientSocket, &QTcpSocket::connected, this, &ChatClient::connected);
-    connect(m_clientSocket, &QTcpSocket::disconnected, this, &ChatClient::disconnected);
+    QObject::connect(m_clientSocket, &QTcpSocket::connected, this, &ChatClient::connected);
+    // QObject::connect(m_clientSocket, &QTcpSocket::disconnected, this, &ChatClient::disconnected); // duplicated + non existent?
+
     // connect readyRead() to the slot that will take care of reading the data in
-    connect(m_clientSocket, &QTcpSocket::readyRead, this, &ChatClient::onReadyRead);
+    QObject::connect(m_clientSocket, &QTcpSocket::readyRead, this, &ChatClient::onReadyRead);
+
     // Forward the error signal, QOverload is necessary as error() is overloaded, see the Qt docs
-    connect(m_clientSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ChatClient::error);
+    QObject::connect(m_clientSocket, &QAbstractSocket::errorOccurred, this, &ChatClient::onError);
+
     // Reset the m_loggedIn variable when we disconnec. Since the operation is trivial we use a lambda instead of creating another slot
-    connect(m_clientSocket, &QTcpSocket::disconnected, this, [this]()->void{m_loggedIn = false;});
+    QObject::connect(m_clientSocket, &QTcpSocket::disconnected, this, [this]()->void{m_loggedIn = false;});
 }
 
 void ChatClient::login(const QString &userName)

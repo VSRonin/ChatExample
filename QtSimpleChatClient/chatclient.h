@@ -3,8 +3,11 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QAbstractSocket>
+
 class QHostAddress;
 class QJsonDocument;
+
 class ChatClient : public QObject
 {
     Q_OBJECT
@@ -24,7 +27,7 @@ signals:
     void loginError(const QString &reason);
     void disconnected();
     void messageReceived(const QString &sender, const QString &text);
-    void error(QAbstractSocket::SocketError socketError);
+    void onError(QAbstractSocket::SocketError socketError);
     void userJoined(const QString &username);
     void userLeft(const QString &username);
 private:

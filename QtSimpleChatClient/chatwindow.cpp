@@ -23,7 +23,7 @@ ChatWindow::ChatWindow(QWidget *parent)
     connect(m_chatClient, &ChatClient::loginError, this, &ChatWindow::loginFailed);
     connect(m_chatClient, &ChatClient::messageReceived, this, &ChatWindow::messageReceived);
     connect(m_chatClient, &ChatClient::disconnected, this, &ChatWindow::disconnectedFromServer);
-    connect(m_chatClient, &ChatClient::error, this, &ChatWindow::error);
+    connect(m_chatClient, &ChatClient::onError, this, &ChatWindow::error);
     connect(m_chatClient, &ChatClient::userJoined, this, &ChatWindow::userJoined);
     connect(m_chatClient, &ChatClient::userLeft, this, &ChatWindow::userLeft);
     // connect the connect button to a slot that will attempt the connection
