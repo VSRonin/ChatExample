@@ -1,0 +1,81 @@
+name: Build on Latest Platform with CMake
+on: 
+  push:
+    branches:
+      - master
+      - commonlib
+      - dev
+    paths-ignore:
+      - 'docs/**'
+      - '**.markdown'
+      - '**.md'
+      - 'LICENSE'
+  pull_request:
+    branches:
+      - master
+      - commonlib
+      - dev
+    paths-ignore:
+      - 'docs/**'
+      - '**.markdown'
+      - '**.md'
+      - 'LICENSE'
+jobs:
+    build:
+        name: Build ${{ matrix.platforms.friendly_name }} Qt${{ matrix.qt.qt_ver }}
+        runs-on: ${{ matrix.platforms.os }}
+        strategy:
+          fail-fast: false
+          matrix:
+              qt:
+                - { qt_ver: 5.15.2, mingw_arch: win64_mingw81 }
+                - { qt_ver: 6.3.1, mingw_arch: win64_mingw }
+              platforms:
+                - { os: windows-latest, generator: "NMake Makefiles", friendly_name: MSVC }
+                - { os: windows-latest, generator: "MinGW Makefiles", friendly_name: MinGW }
+                - { os: ubuntu-latest, generator: "Unix Makefiles", friendly_name: Ubuntu }
+                - { os: macos-latest, generator: "Unix Makefiles", friendly_name: MacOS }
+        steps:
+          - name: Install Qt
+            if: ${{ matrix.platforms.friendly_name != 'MinGW' }}
+            uses: jurplel/install-qt-action@v2
+            with:
+              version: ${{ matrix.qt.qt_ver }}
+          - name: Install Qt MinGW
+            if: ${{ matrix.platforms.friendly_name == 'MinGW' }}
+            uses: jurplel/install-qt-action@v2
+            with:
+              version: ${{ matrix.qt.qt_ver }}
+              arch: ${{ matrix.qt.mingw_arch }}
+          - name: Upgrade MinGW
+            if: ${{ matrix.platforms.friendly_name == 'MinGW' }}
+            run: |
+              choco upgrade mingw
+          - name: Git Checkout
+            uses: actions/checkout@v2
+            with:
+              fetch-depth: 0
+          - name: Create Build Directory
+            shell: pwsh
+            run: |
+              mkdir build
+              cd build
+              mkdir debug
+              mkdir release
+          - name: Set up MSVC environment
+            if: ${{ matrix.platforms.friendly_name == 'MSVC' }}
+            uses: ilammy/msvc-dev-cmd@v1
+          - name: Install Linux Dependencies
+            if: ${{ runner.os == 'Linux' }}
+            run: |
+              sudo apt-get update -y
+              sudo apt-get install libxcb-icccm4 libxcb-xkb1 libxcb-icccm4 libxcb-image0 libxcb-render-util0 libxcb-randr0 libxcb-keysyms1 libxcb-xinerama0 libxcb-xinput-dev
+          - name: ${{ matrix.platforms.friendly_name }} Qt${{ matrix.qt.qt_ver }}
+            shell: pwsh
+            run: |
+              cd build/debug
+              cmake -G"${{ matrix.platforms.generator }}" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=d ../../
+              cmake --build .
+              cd ../release
+              cmake -G"${{ matrix.platforms.generator }}" -DCMAKE_BUILD_TYPE=RELEASE  ../../
+              cmake --build .
