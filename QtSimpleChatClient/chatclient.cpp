@@ -16,8 +16,12 @@ ChatClient::ChatClient(QObject *parent)
     connect(m_clientSocket, &QTcpSocket::disconnected, this, &ChatClient::disconnected);
     // connect readyRead() to the slot that will take care of reading the data in
     connect(m_clientSocket, &QTcpSocket::readyRead, this, &ChatClient::onReadyRead);
-    // Forward the error signal, QOverload is necessary as error() is overloaded, see the Qt docs
+    // Forward the error signal, QOverload is necessary as error() is overloaded, see the Qt docs 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     connect(m_clientSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ChatClient::error);
+#else
+    connect(m_clientSocket, &QAbstractSocket::errorOccurred, this, &ChatClient::error);
+#endif
     // Reset the m_loggedIn variable when we disconnec. Since the operation is trivial we use a lambda instead of creating another slot
     connect(m_clientSocket, &QTcpSocket::disconnected, this, [this]()->void{m_loggedIn = false;});
 }
